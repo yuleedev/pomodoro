@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="en" class="dark">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta name="color-scheme" content="dark light" />
+    <meta name="theme-color" content="#0A0A0A" media="(prefers-color-scheme: dark)" />
+    <meta name="theme-color" content="#FAFAFA" media="(prefers-color-scheme: light)" />
+    <meta
+      name="description"
+      content="A calm, minimalist soundscape player for deep focus and study."
+    />
+    <title>Soundscape — focus audio</title>
+    <script>
+      // Apply the saved theme before first paint to avoid a flash of the wrong
+      // background. Dark mode is the default.
+      (function () {
+        try {
+          var saved = localStorage.getItem('soundscape:theme');
+          var theme = saved === 'light' || saved === 'dark' ? saved : 'dark';
+          document.documentElement.classList.toggle('dark', theme === 'dark');
+        } catch (e) {
+          /* localStorage unavailable — keep the default dark class */
+        }
+      })();
+    </script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

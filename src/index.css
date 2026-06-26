@@ -1,0 +1,216 @@
+@import 'tailwindcss';
+
+/*
+ * ─────────────────────────────────────────────────────────────────────────
+ *  DESIGN SYSTEM — strictly monochrome, Apple-inspired
+ * ─────────────────────────────────────────────────────────────────────────
+ *  Everything differentiates by weight, spacing and subtle gray steps.
+ *  No hue, ever. Tokens below are the single source of truth; components
+ *  reference them through the semantic Tailwind colors mapped in @theme.
+ */
+
+/* Class-based dark mode: the `.dark` class on <html> toggles the palette. */
+@custom-variant dark (&:where(.dark, .dark *));
+
+:root {
+  /* Light mode — near-white field, near-black ink. */
+  --bg: #fafafa;
+  --bg-elevated: #ffffff;
+  --text: #1d1d1f;
+  --text-secondary: #6e6e73;
+  --text-tertiary: #a1a1a6;
+  --hairline: rgba(0, 0, 0, 0.1);
+  --hairline-strong: rgba(0, 0, 0, 0.16);
+  /* Translucent material for frosted overlays / control bar. */
+  --glass: rgba(255, 255, 255, 0.72);
+  --glass-border: rgba(0, 0, 0, 0.08);
+  /* Fill used for tactile controls (track, idle button). */
+  --fill: rgba(0, 0, 0, 0.05);
+  --fill-strong: rgba(0, 0, 0, 0.09);
+  /* The single "ink" tone used for the primary play control. */
+  --ink: #1d1d1f;
+  --ink-contrast: #ffffff;
+  --shadow: 0 1px 2px rgba(0, 0, 0, 0.04), 0 12px 32px rgba(0, 0, 0, 0.08);
+  color-scheme: light;
+}
+
+.dark {
+  /* Dark mode (default) — true near-black, off-white ink. */
+  --bg: #0a0a0a;
+  --bg-elevated: #161617;
+  --text: #f5f5f7;
+  --text-secondary: #a1a1a6;
+  --text-tertiary: #6e6e73;
+  --hairline: rgba(255, 255, 255, 0.1);
+  --hairline-strong: rgba(255, 255, 255, 0.18);
+  --glass: rgba(22, 22, 23, 0.64);
+  --glass-border: rgba(255, 255, 255, 0.1);
+  --fill: rgba(255, 255, 255, 0.07);
+  --fill-strong: rgba(255, 255, 255, 0.12);
+  --ink: #f5f5f7;
+  --ink-contrast: #0a0a0a;
+  --shadow: 0 1px 2px rgba(0, 0, 0, 0.3), 0 16px 40px rgba(0, 0, 0, 0.5);
+  color-scheme: dark;
+}
+
+/* Map the tokens to Tailwind's color/utility namespace so we can write
+   `bg-bg`, `text-secondary`, `border-hairline`, etc. across components. */
+@theme inline {
+  --color-bg: var(--bg);
+  --color-elevated: var(--bg-elevated);
+  --color-ink: var(--ink);
+  --color-ink-contrast: var(--ink-contrast);
+  --color-content: var(--text);
+  --color-secondary: var(--text-secondary);
+  --color-tertiary: var(--text-tertiary);
+  --color-hairline: var(--hairline);
+  --color-hairline-strong: var(--hairline-strong);
+  --color-fill: var(--fill);
+  --color-fill-strong: var(--fill-strong);
+
+  --font-sans:
+    -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'SF Pro Text', 'Inter',
+    system-ui, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+
+  /* Gentle, consistent rounding — 12–20px range. */
+  --radius-lg: 16px;
+  --radius-xl: 20px;
+  --radius-2xl: 28px;
+
+  /* Restrained, springy default easing. */
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+@layer base {
+  * {
+    /* Hairlines and rings default to the gray token. */
+    border-color: var(--hairline);
+  }
+
+  html {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+  }
+
+  /* Interactive elements use the pointer (hand) cursor on hover. */
+  button:not(:disabled),
+  [role='button']:not([aria-disabled='true']),
+  label,
+  a,
+  summary,
+  input[type='range'] {
+    cursor: pointer;
+  }
+  button:disabled,
+  [aria-disabled='true'] {
+    cursor: not-allowed;
+  }
+
+  body {
+    margin: 0;
+    background-color: var(--bg);
+    color: var(--text);
+    font-family: var(--font-sans);
+    font-weight: 400;
+    letter-spacing: -0.01em;
+    /* Smooth the theme switch. */
+    transition:
+      background-color 0.4s var(--ease-out),
+      color 0.4s var(--ease-out);
+  }
+
+  /* Confident headings: tight tracking, light weight. */
+  h1,
+  h2,
+  h3 {
+    letter-spacing: -0.03em;
+    font-weight: 500;
+  }
+
+  ::selection {
+    background: var(--fill-strong);
+  }
+
+  /* Honour reduced-motion: kill the longer animations. */
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.001ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.001ms !important;
+    }
+  }
+}
+
+@layer components {
+  /* Frosted translucent material for the control bar and overlays. */
+  .glass {
+    background: var(--glass);
+    backdrop-filter: saturate(180%) blur(24px);
+    -webkit-backdrop-filter: saturate(180%) blur(24px);
+    border: 1px solid var(--glass-border);
+  }
+
+  /* Thin, minimal, grayscale range slider. */
+  .slider {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 100%;
+    height: 3px;
+    border-radius: 999px;
+    background: var(--fill-strong);
+    outline: none;
+    cursor: pointer;
+  }
+  .slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: var(--ink);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+    transition: transform 0.15s var(--ease-out);
+  }
+  .slider::-webkit-slider-thumb:hover {
+    transform: scale(1.18);
+  }
+  .slider::-moz-range-thumb {
+    width: 14px;
+    height: 14px;
+    border: none;
+    border-radius: 50%;
+    background: var(--ink);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+  }
+}
+
+/* The signature breathing pulse, driven only when audio is playing. */
+@keyframes breathe {
+  0%,
+  100% {
+    transform: scale(1);
+    opacity: 0.55;
+  }
+  50% {
+    transform: scale(1.12);
+    opacity: 0.9;
+  }
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in {
+  animation: fade-in 0.5s var(--ease-out) both;
+}

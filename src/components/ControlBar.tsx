@@ -1,0 +1,54 @@
+/*
+ * The persistent frosted control bar, pinned to the bottom. Holds a compact
+ * play/pause (handy when scrolled away from the hero), the master volume, and
+ * an entry into focus mode. Translucent material, monochrome, restrained.
+ */
+import { Maximize2, Pause, Play, Volume1, Volume2, VolumeX } from 'lucide-react'
+import { useStore } from '../state/store'
+import { Slider } from './Slider'
+
+export function ControlBar() {
+  const isPlaying = useStore((s) => s.isPlaying)
+  const togglePlay = useStore((s) => s.togglePlay)
+  const hasMix = useStore((s) => Object.keys(s.mix).length > 0)
+  const masterVolume = useStore((s) => s.masterVolume)
+  const setMasterVolume = useStore((s) => s.setMasterVolume)
+  const enterFocus = useStore((s) => s.enterFocus)
+
+  const VolIcon = masterVolume === 0 ? VolumeX : masterVolume < 0.5 ? Volume1 : Volume2
+
+  return (
+    <div className="pointer-events-none fixed inset-x-0 bottom-0 z-30 flex justify-center px-4 pb-[calc(1rem+env(safe-area-inset-bottom))]">
+      <div className="glass pointer-events-auto flex w-full max-w-md items-center gap-3 rounded-full px-3 py-2.5 shadow-[var(--shadow)]">
+        {/* Compact play / pause */}
+        <button
+          onClick={togglePlay}
+          disabled={!hasMix}
+          aria-label={isPlaying ? 'Pause' : 'Play'}
+          className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-ink text-ink-contrast transition-all duration-200 hover:scale-105 active:scale-95 disabled:opacity-25 disabled:hover:scale-100"
+        >
+          {isPlaying ? (
+            <Pause className="h-4 w-4" strokeWidth={1.5} fill="currentColor" />
+          ) : (
+            <Play className="h-4 w-4 translate-x-[1px]" strokeWidth={1.5} fill="currentColor" />
+          )}
+        </button>
+
+        {/* Master volume */}
+        <VolIcon className="h-4 w-4 shrink-0 text-tertiary" strokeWidth={1.5} />
+        <div className="flex-1">
+          <Slider value={masterVolume} onChange={setMasterVolume} ariaLabel="Master volume" />
+        </div>
+
+        {/* Enter focus */}
+        <button
+          onClick={enterFocus}
+          aria-label="Enter focus mode"
+          className="grid h-10 w-10 shrink-0 place-items-center rounded-full text-secondary transition-colors duration-200 hover:bg-fill hover:text-content"
+        >
+          <Maximize2 className="h-4 w-4" strokeWidth={1.5} />
+        </button>
+      </div>
+    </div>
+  )
+}
