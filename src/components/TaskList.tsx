@@ -194,7 +194,7 @@ function TaskRow({ task }: { task: Task }) {
       exit={{ opacity: 0, transition: { duration: 0.15 } }}
       transition={{ type: 'spring', stiffness: 520, damping: 42 }}
       className={`group relative rounded-[var(--radius-lg)] transition-colors duration-200 ${
-        active || open ? 'bg-fill' : 'hover:bg-fill'
+        open ? 'bg-fill' : 'hover:bg-fill'
       }`}
     >
       <div className="relative flex items-center gap-2 py-2.5 pl-2 pr-2">
