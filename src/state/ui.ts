@@ -8,6 +8,7 @@ interface UIState {
   historyOpen: boolean
   customizeOpen: boolean
   soundOpen: boolean
+  settingsOpen: boolean
   openAuth: () => void
   closeAuth: () => void
   openHistory: () => void
@@ -16,6 +17,8 @@ interface UIState {
   closeCustomize: () => void
   openSound: () => void
   closeSound: () => void
+  openSettings: () => void
+  closeSettings: () => void
 }
 
 export const useUI = create<UIState>((set) => ({
@@ -23,6 +26,7 @@ export const useUI = create<UIState>((set) => ({
   historyOpen: false,
   customizeOpen: false,
   soundOpen: false,
+  settingsOpen: false,
   openAuth: () => set({ authOpen: true }),
   closeAuth: () => set({ authOpen: false }),
   openHistory: () => set({ historyOpen: true }),
@@ -31,4 +35,6 @@ export const useUI = create<UIState>((set) => ({
   closeCustomize: () => set({ customizeOpen: false }),
   openSound: () => set({ soundOpen: true }),
   closeSound: () => set({ soundOpen: false }),
+  openSettings: () => set({ settingsOpen: true }),
+  closeSettings: () => set({ settingsOpen: false }),
 }))

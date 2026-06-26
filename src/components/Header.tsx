@@ -1,12 +1,13 @@
 /* Minimal top bar: the wordmark, the soundscape + history + account controls,
    and a customization button (theme, timer style, accent palette). */
-import { AudioLines, SlidersHorizontal } from 'lucide-react'
+import { AudioLines, Settings, SlidersHorizontal } from 'lucide-react'
 import { AccountMenu } from './AccountMenu'
 import { useUI } from '../state/ui'
 
 export function Header() {
   const openCustomize = useUI((s) => s.openCustomize)
   const openSound = useUI((s) => s.openSound)
+  const openSettings = useUI((s) => s.openSettings)
 
   return (
     <header className="flex items-center justify-between py-6">
@@ -18,6 +19,13 @@ export function Header() {
           className="grid h-9 w-9 place-items-center rounded-full text-secondary transition-colors duration-200 hover:bg-fill hover:text-content"
         >
           <AudioLines className="h-[18px] w-[18px]" strokeWidth={1.5} />
+        </button>
+        <button
+          onClick={openSettings}
+          aria-label="Open settings"
+          className="grid h-9 w-9 place-items-center rounded-full text-secondary transition-colors duration-200 hover:bg-fill hover:text-content"
+        >
+          <Settings className="h-[18px] w-[18px]" strokeWidth={1.5} />
         </button>
         <AccountMenu />
         <button

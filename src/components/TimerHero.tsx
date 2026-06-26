@@ -5,12 +5,11 @@
  * wraps big tight-tracked numerals and the active task name. Controls sit
  * below; when idle, compact duration steppers appear. Strictly monochrome.
  */
-import { useState } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
-import { Maximize2, Minus, Pause, Play, Plus, RotateCcw } from 'lucide-react'
+import { Maximize2, Pause, Play, RotateCcw } from 'lucide-react'
 import { useStore } from '../state/store'
 import { formatClock } from '../lib/time'
-import { popSpring, softSpring, spring, tapScale } from '../lib/motion'
+import { popSpring, spring, tapScale } from '../lib/motion'
 import { TimerRing } from './TimerRing'
 
 export function TimerHero() {
@@ -26,7 +25,6 @@ export function TimerHero() {
   const pauseTimer = useStore((s) => s.pauseTimer)
   const resetTimer = useStore((s) => s.resetTimer)
   const enterFocus = useStore((s) => s.enterFocus)
-  const setTimerConfig = useStore((s) => s.setTimerConfig)
   const setTimerMode = useStore((s) => s.setTimerMode)
   const activeTask = useStore((s) => s.tasks.find((t) => t.id === s.selectedTaskId))
 
@@ -151,49 +149,6 @@ export function TimerHero() {
         </div>
       )}
 
-      {/* Duration steppers (Pomodoro, idle only) — collapse/expand on mode switch. */}
-      <AnimatePresence initial={false}>
-        {idle && !stopwatch && (
-          <motion.div
-            key="steppers"
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: 'auto' }}
-            exit={{ opacity: 0, height: 0 }}
-            transition={softSpring}
-            className="w-full max-w-sm overflow-hidden"
-          >
-            <div className="mt-7 grid grid-cols-3 gap-3">
-              <Stepper
-                label="Focus"
-                unit="min"
-                value={timer.workMinutes}
-                min={5}
-                max={180}
-                step={5}
-                onChange={(v) => setTimerConfig({ workMinutes: v })}
-              />
-              <Stepper
-                label="Break"
-                unit="min"
-                value={timer.breakMinutes}
-                min={1}
-                max={60}
-                step={1}
-                onChange={(v) => setTimerConfig({ breakMinutes: v })}
-              />
-              <Stepper
-                label="Rounds"
-                unit="×"
-                value={timer.sessions}
-                min={1}
-                max={12}
-                step={1}
-                onChange={(v) => setTimerConfig({ sessions: v })}
-              />
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
     </section>
   )
 }
@@ -220,70 +175,3 @@ function GhostBtn({
   )
 }
 
-function Stepper({
-  label,
-  unit,
-  value,
-  min,
-  max,
-  step,
-  onChange,
-}: {
-  label: string
-  unit: string
-  value: number
-  min: number
-  max: number
-  step: number
-  onChange: (v: number) => void
-}) {
-  // While editing, hold the raw text so partial input ("1", "") isn't clamped
-  // mid-keystroke. On blur/Enter we parse, clamp to [min, max], and commit.
-  const [draft, setDraft] = useState<string | null>(null)
-
-  const commit = (raw: string) => {
-    const n = Math.round(Number(raw))
-    if (raw.trim() !== '' && Number.isFinite(n)) onChange(Math.max(min, Math.min(max, n)))
-    setDraft(null)
-  }
-
-  return (
-    <div className="flex flex-col items-center gap-2">
-      <span className="text-[12px] uppercase tracking-[0.1em] text-tertiary">{label}</span>
-      <div className="flex items-center gap-2">
-        <button
-          onClick={() => onChange(Math.max(min, value - step))}
-          disabled={value <= min}
-          aria-label={`Decrease ${label}`}
-          className="grid h-7 w-7 place-items-center rounded-full border border-hairline text-secondary transition-colors duration-200 hover:bg-fill hover:text-content disabled:opacity-30"
-        >
-          <Minus className="h-3.5 w-3.5" strokeWidth={2} />
-        </button>
-        <span className="flex w-11 items-baseline justify-center text-[22px] font-medium tabular-nums text-content">
-          <input
-            type="text"
-            inputMode="numeric"
-            aria-label={`${label} (${unit})`}
-            value={draft ?? String(value)}
-            onChange={(e) => setDraft(e.target.value.replace(/[^0-9]/g, ''))}
-            onFocus={(e) => e.target.select()}
-            onBlur={(e) => commit(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter') e.currentTarget.blur()
-            }}
-            className="w-7 bg-transparent text-right tabular-nums text-content outline-none focus:text-accent"
-          />
-          <span className="ml-0.5 text-[12px] text-tertiary">{unit}</span>
-        </span>
-        <button
-          onClick={() => onChange(Math.min(max, value + step))}
-          disabled={value >= max}
-          aria-label={`Increase ${label}`}
-          className="grid h-7 w-7 place-items-center rounded-full border border-hairline text-secondary transition-colors duration-200 hover:bg-fill hover:text-content disabled:opacity-30"
-        >
-          <Plus className="h-3.5 w-3.5" strokeWidth={2} />
-        </button>
-      </div>
-    </div>
-  )
-}

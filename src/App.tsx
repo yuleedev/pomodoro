@@ -13,6 +13,7 @@ import { FocusMode } from './components/FocusMode'
 import { Header } from './components/Header'
 import { HistoryView } from './components/HistoryView'
 import { Reveal } from './components/Reveal'
+import { SettingsPanel } from './components/SettingsPanel'
 import { SoundPanel } from './components/SoundPanel'
 import { TaskList } from './components/TaskList'
 import { TimerHero } from './components/TimerHero'
@@ -30,6 +31,7 @@ export function App() {
   const historyOpen = useUI((s) => s.historyOpen)
   const customizeOpen = useUI((s) => s.customizeOpen)
   const soundOpen = useUI((s) => s.soundOpen)
+  const settingsOpen = useUI((s) => s.settingsOpen)
   const initAuth = useAuth((s) => s.init)
   const userId = useAuth((s) => s.user?.id)
   const authStatus = useAuth((s) => s.status)
@@ -73,6 +75,7 @@ export function App() {
       {authOpen && <AuthPanel />}
       {customizeOpen && <CustomizePanel />}
       {soundOpen && <SoundPanel />}
+      {settingsOpen && <SettingsPanel />}
     </div>
   )
 }

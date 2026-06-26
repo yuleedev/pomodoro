@@ -24,6 +24,8 @@ export class AudioEngine {
   private analyser: AnalyserNode | null = null
   private workletReady: Promise<void> | null = null
   private layers = new Map<string, Layer>()
+  /** Decoded audio files, cached by src so each file is fetched once. */
+  private buffers = new Map<string, Promise<AudioBuffer>>()
 
   /** Lazily create the context (must follow a user gesture per autoplay rules). */
   private async ensure(): Promise<AudioContext> {
@@ -87,84 +89,49 @@ export class AudioEngine {
       })
       node.connect(gain)
       layer.nodes.push(node)
-    } else {
-      // ambient - procedural, built from the same worklet + filters/LFOs.
-      this.buildAmbient(ctx, sound, gain, layer)
+    } else if (sound.src) {
+      // ambient - looping royalty-free audio file.
+      this.buildFile(ctx, sound, gain, layer)
     }
 
     this.layers.set(sound.id, layer)
     gain.gain.setTargetAtTime(clamp01(volume), ctx.currentTime, RAMP)
   }
 
-  /** Build a procedural ambient layer (filtered, modulated noise). */
-  private buildAmbient(ctx: AudioContext, sound: Sound, gain: GainNode, layer: Layer) {
-    // Ambient sounds also use the noise worklet, then shape with biquads.
-    const startNoise = async (type: 'white' | 'brown') => {
-      await this.loadWorklet(ctx)
-      const node = new AudioWorkletNode(ctx, 'noise-processor', {
-        processorOptions: { type },
-      })
-      return node
+  /** Fetch and decode an audio file once; subsequent plays reuse the buffer. */
+  private loadBuffer(ctx: AudioContext, src: string): Promise<AudioBuffer> {
+    let pending = this.buffers.get(src)
+    if (!pending) {
+      pending = fetch(src)
+        .then((res) => {
+          if (!res.ok) throw new Error(`${res.status} ${res.statusText}`)
+          return res.arrayBuffer()
+        })
+        .then((data) => ctx.decodeAudioData(data))
+        .catch((err) => {
+          this.buffers.delete(src) // allow a later retry
+          throw err
+        })
+      this.buffers.set(src, pending)
     }
-
-    if (sound.ambientType === 'rain') {
-      startNoise('white').then((noise) => {
-        if (!this.layers.has(sound.id) && !this.starting(sound.id, layer)) return
-        const hp = ctx.createBiquadFilter()
-        hp.type = 'highpass'
-        hp.frequency.value = 600
-        const lp = ctx.createBiquadFilter()
-        lp.type = 'lowpass'
-        lp.frequency.value = 5200
-        noise.connect(hp)
-        hp.connect(lp)
-        lp.connect(gain)
-        layer.nodes.push(noise, hp, lp)
-        // Subtle shower swells via a slow LFO on a trim gain.
-        const trim = this.attachSwell(ctx, lp, gain, 0.07, 0.12, layer)
-        layer.nodes.push(trim)
-      })
-    } else {
-      // wind
-      startNoise('brown').then((noise) => {
-        if (!this.layers.has(sound.id) && !this.starting(sound.id, layer)) return
-        const lp = ctx.createBiquadFilter()
-        lp.type = 'lowpass'
-        lp.frequency.value = 900
-        noise.connect(lp)
-        lp.connect(gain)
-        layer.nodes.push(noise, lp)
-        // Slowly sweep the cutoff so the wind "breathes".
-        const lfo = ctx.createOscillator()
-        const lfoGain = ctx.createGain()
-        lfo.frequency.value = 0.06
-        lfoGain.gain.value = 400
-        lfo.connect(lfoGain)
-        lfoGain.connect(lp.frequency)
-        lfo.start()
-        layer.nodes.push(lfo, lfoGain)
-      })
-    }
+    return pending
   }
 
-  /** Insert a slow amplitude swell between `from` and `to`. Returns the trim gain. */
-  private attachSwell(
-    ctx: AudioContext,
-    _from: AudioNode,
-    _to: GainNode,
-    rate: number,
-    depth: number,
-    layer: Layer,
-  ): GainNode {
-    const lfo = ctx.createOscillator()
-    const lfoGain = ctx.createGain()
-    lfo.frequency.value = rate
-    lfoGain.gain.value = depth
-    lfo.connect(lfoGain)
-    lfoGain.connect(layer.gain.gain)
-    lfo.start()
-    layer.nodes.push(lfo, lfoGain)
-    return lfoGain
+  /** Build an ambient layer from a looping audio file. */
+  private buildFile(ctx: AudioContext, sound: Sound, gain: GainNode, layer: Layer) {
+    this.loadBuffer(ctx, sound.src!)
+      .then((buffer) => {
+        if (!this.starting(sound.id, layer)) return // stopped before it loaded
+        const node = ctx.createBufferSource()
+        node.buffer = buffer
+        node.loop = true
+        node.connect(gain)
+        node.start()
+        layer.nodes.push(node)
+      })
+      .catch((err) => {
+        console.warn(`Could not play "${sound.name}" (${sound.src}):`, err)
+      })
   }
 
   /** Guard for async ambient builders: confirm the layer is still wanted. */

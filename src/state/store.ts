@@ -49,6 +49,10 @@ interface State {
   timer: TimerConfig
   /** Which clock the hero shows: countdown Pomodoro or count-up stopwatch. */
   timerMode: TimerMode
+  /** When a focus session ends, start the break automatically (Pomodoro). */
+  autoStartBreak: boolean
+  /** When a break ends, start the next focus session automatically (Pomodoro). */
+  autoStartFocus: boolean
   phase: TimerPhase
   remainingSec: number
   /** Seconds elapsed in stopwatch mode (counts up; unused in Pomodoro). */
@@ -91,6 +95,8 @@ interface State {
 
   setTimerConfig: (c: Partial<TimerConfig>) => void
   setTimerMode: (mode: TimerMode) => void
+  setAutoStartBreak: (v: boolean) => void
+  setAutoStartFocus: (v: boolean) => void
   startTimer: () => void
   pauseTimer: () => void
   resetTimer: () => void
@@ -150,6 +156,8 @@ export const useStore = create<State>()(
 
       timer: { workMinutes: 25, breakMinutes: 5, sessions: 4 },
       timerMode: 'pomodoro',
+      autoStartBreak: true,
+      autoStartFocus: true,
       phase: 'idle',
       remainingSec: 0,
       elapsedSec: 0,
@@ -271,6 +279,9 @@ export const useStore = create<State>()(
         })
       },
 
+      setAutoStartBreak: (v) => set({ autoStartBreak: v }),
+      setAutoStartFocus: (v) => set({ autoStartFocus: v }),
+
       startTimer: () => {
         const { phase, timer, timerMode, isPlaying, togglePlay } = get()
         if (phase === 'idle') {
@@ -281,6 +292,10 @@ export const useStore = create<State>()(
             completedSessions: 0,
             phaseStartedAt: Date.now(),
           })
+        } else if (get().phaseStartedAt === null) {
+          // Resuming a phase that was parked at a boundary because auto-start is
+          // off (e.g. focus ended, waiting for the user to start the break).
+          set({ phaseStartedAt: Date.now() })
         }
         set({ timerRunning: true })
         if (!isPlaying && Object.keys(get().mix).length > 0) togglePlay()
@@ -432,6 +447,8 @@ export const useStore = create<State>()(
         mix: s.mix,
         timer: s.timer,
         timerMode: s.timerMode,
+        autoStartBreak: s.autoStartBreak,
+        autoStartFocus: s.autoStartFocus,
         selectedTaskId: s.selectedTaskId,
         activeCategoryId: s.activeCategoryId,
         timerStyle: s.timerStyle,
@@ -491,19 +508,31 @@ function startTicking(set: SetFn, get: GetFn) {
           phaseStartedAt: null,
         })
       } else {
+        // Move into the break. Auto-start keeps ticking; otherwise park it at
+        // the boundary (paused, no start time) until the user hits start.
         void engine.chime(false)
+        const auto = get().autoStartBreak
         set({
           phase: 'break',
           remainingSec: timer.breakMinutes * 60,
           completedSessions: done,
-          phaseStartedAt: Date.now(),
+          phaseStartedAt: auto ? Date.now() : null,
+          timerRunning: auto,
         })
+        if (!auto) stopTicking()
       }
     } else {
-      // Break finished - record it, then back to work.
+      // Break finished - record it, then back to work (auto-start or parked).
       logCompleted('break', timer.breakMinutes, startedAt, get)
       void engine.chime(true)
-      set({ phase: 'work', remainingSec: timer.workMinutes * 60, phaseStartedAt: Date.now() })
+      const auto = get().autoStartFocus
+      set({
+        phase: 'work',
+        remainingSec: timer.workMinutes * 60,
+        phaseStartedAt: auto ? Date.now() : null,
+        timerRunning: auto,
+      })
+      if (!auto) stopTicking()
     }
   }, 1000)
 }

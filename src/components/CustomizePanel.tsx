@@ -6,6 +6,7 @@
  * The accent flows through the timer ring, session dots, and the active-task
  * indicator via the global --accent variable.
  */
+import { useState } from 'react'
 import { motion } from 'framer-motion'
 import { Check, Moon, Plus, Sun, X } from 'lucide-react'
 import { useStore, type TimerStyle } from '../state/store'
@@ -42,6 +43,16 @@ export function CustomizePanel() {
   const customSwatches = useStore((s) => s.customSwatches)
   const addSwatch = useStore((s) => s.addSwatch)
   const removeSwatch = useStore((s) => s.removeSwatch)
+
+  // Color staged in the native picker. Dragging the spectrum only updates this
+  // draft (and the live preview); it's saved to the palette only on an explicit
+  // click of the confirm swatch - so dragging never spams the selector.
+  const [draft, setDraft] = useState<string | null>(null)
+
+  const commitDraft = () => {
+    if (draft) addSwatch(draft)
+    setDraft(null)
+  }
 
   return (
     <div className="fixed inset-0 z-[60] flex items-end justify-center sm:items-center">
@@ -125,8 +136,9 @@ export function CustomizePanel() {
 
         {/* Color theme */}
         <Section title="Color theme">
-          {/* Live preview of the whole-app tint for the current selection */}
-          <ThemePreview accent={accent} />
+          {/* Live preview of the whole-app tint - shows the staged draft while
+              the picker is open, otherwise the saved selection. */}
+          <ThemePreview accent={draft ?? accent} />
 
           <div className="mt-4 flex flex-wrap items-center gap-3">
             {/* Monochrome (default) */}
@@ -165,17 +177,44 @@ export function CustomizePanel() {
               </div>
             ))}
 
-            {/* Add a custom color via the native picker */}
+            {/* Staged color - dragging the picker lands here; it joins the
+                palette only when this confirm swatch is clicked. */}
+            {draft && (
+              <div className="group relative">
+                <motion.button
+                  initial={{ scale: 0.6, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  transition={popSpring}
+                  onClick={commitDraft}
+                  title={`Add ${draft}`}
+                  aria-label={`Add ${draft} to your colors`}
+                  className="grid h-8 w-8 place-items-center rounded-full border border-hairline ring-2 ring-content ring-offset-2 ring-offset-elevated"
+                  style={{ backgroundColor: draft }}
+                >
+                  <Check className="h-4 w-4 text-white mix-blend-difference" strokeWidth={2.5} />
+                </motion.button>
+                <button
+                  onClick={() => setDraft(null)}
+                  aria-label="Discard color"
+                  className="absolute -right-1 -top-1 grid h-4 w-4 place-items-center rounded-full bg-elevated text-tertiary opacity-0 shadow-[var(--shadow)] transition-opacity duration-150 hover:text-content group-hover:opacity-100"
+                >
+                  <X className="h-2.5 w-2.5" strokeWidth={2} />
+                </button>
+              </div>
+            )}
+
+            {/* Open the native picker to stage a custom color */}
             <label
               className="grid h-8 w-8 cursor-pointer place-items-center rounded-full border border-dashed border-hairline-strong text-tertiary transition-colors duration-200 hover:bg-fill hover:text-content"
-              title="Add a custom color"
+              title="Pick a custom color"
             >
               <Plus className="h-4 w-4" strokeWidth={1.5} />
               <input
                 type="color"
                 className="sr-only"
-                onChange={(e) => addSwatch(e.target.value)}
-                aria-label="Add a custom accent color"
+                value={draft ?? accent ?? '#4f7df0'}
+                onChange={(e) => setDraft(e.target.value)}
+                aria-label="Pick a custom accent color"
               />
             </label>
           </div>
@@ -185,7 +224,11 @@ export function CustomizePanel() {
             <span className="inline-flex h-4 w-4 -translate-y-px items-center justify-center rounded-full border border-dashed border-hairline-strong align-middle">
               <Plus className="h-2.5 w-2.5" strokeWidth={2} />
             </span>{' '}
-            to add your own, or pick Monochrome for the original black-and-white look.
+            to pick a color, then tap the{' '}
+            <span className="inline-flex h-4 w-4 -translate-y-px items-center justify-center rounded-full bg-content align-middle text-elevated">
+              <Check className="h-2.5 w-2.5" strokeWidth={2.5} />
+            </span>{' '}
+            swatch to save it. Pick Monochrome for the original black-and-white look.
           </p>
         </Section>
       </motion.div>

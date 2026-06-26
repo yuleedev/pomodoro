@@ -1,7 +1,7 @@
 /*
- * The sound library - fully procedural, generated in real time with the Web
- * Audio API. No files, no external streams, no uploads: everything here works
- * offline and is license-free.
+ * The sound library. Noise sounds are fully procedural (generated in real time
+ * with the Web Audio API). Ambient sounds play looping royalty-free audio files
+ * from /public/sounds — drop your own files there and reference them via `src`.
  */
 
 export type SoundKind = 'noise' | 'ambient'
@@ -17,8 +17,8 @@ export interface Sound {
   defaultVolume: number
   /** noise sounds only */
   noiseType?: 'white' | 'pink' | 'brown'
-  /** procedural ambient sounds only */
-  ambientType?: 'rain' | 'wind'
+  /** ambient sounds: path to a looping audio file under /public */
+  src?: string
 }
 
 /** Procedural sounds - generated in real time, always available offline. */
@@ -55,16 +55,34 @@ const PROCEDURAL: Sound[] = [
     name: 'Rain',
     kind: 'ambient',
     category: 'Ambient',
-    ambientType: 'rain',
+    src: '/sounds/rain.ogg',
     defaultVolume: 0.5,
     description: 'Gentle, steady rainfall. Cozy and grounding for reading or writing.',
+  },
+  {
+    id: 'ambient-fire',
+    name: 'Fire',
+    kind: 'ambient',
+    category: 'Ambient',
+    src: '/sounds/fire.ogg',
+    defaultVolume: 0.5,
+    description: 'Crackling fireplace. Warm and intimate; a snug late-night layer.',
+  },
+  {
+    id: 'ambient-ocean',
+    name: 'Ocean',
+    kind: 'ambient',
+    category: 'Ambient',
+    src: '/sounds/ocean.ogg',
+    defaultVolume: 0.5,
+    description: 'Rolling ocean waves. Slow, rhythmic, and deeply calming.',
   },
   {
     id: 'ambient-wind',
     name: 'Wind',
     kind: 'ambient',
     category: 'Ambient',
-    ambientType: 'wind',
+    src: '/sounds/wind.ogg',
     defaultVolume: 0.45,
     description: 'Soft, drifting wind. Airy and spacious; a light ambient layer.',
   },
