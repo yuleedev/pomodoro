@@ -1,27 +1,22 @@
 /*
  * The persistent frosted control bar, pinned to the bottom. Holds a compact
- * play/pause (handy when scrolled away from the hero), the master volume, and
- * an entry into focus mode. Translucent material, monochrome, restrained.
+ * play/pause (handy when scrolled away from the hero) and an entry into focus
+ * mode. Translucent material, monochrome, restrained.
  */
 import { motion } from 'framer-motion'
-import { Maximize2, Pause, Play, Volume1, Volume2, VolumeX } from 'lucide-react'
+import { Maximize2, Pause, Play } from 'lucide-react'
 import { useStore } from '../state/store'
 import { spring } from '../lib/motion'
-import { Slider } from './Slider'
 
 export function ControlBar() {
   const isPlaying = useStore((s) => s.isPlaying)
   const togglePlay = useStore((s) => s.togglePlay)
   const hasMix = useStore((s) => Object.keys(s.mix).length > 0)
-  const masterVolume = useStore((s) => s.masterVolume)
-  const setMasterVolume = useStore((s) => s.setMasterVolume)
   const enterFocus = useStore((s) => s.enterFocus)
-
-  const VolIcon = masterVolume === 0 ? VolumeX : masterVolume < 0.5 ? Volume1 : Volume2
 
   return (
     <div className="pointer-events-none fixed inset-x-0 bottom-0 z-30 flex justify-center px-4 pb-[calc(1rem+env(safe-area-inset-bottom))]">
-      <div className="glass pointer-events-auto flex w-full max-w-md items-center gap-3 rounded-full px-3 py-2.5 shadow-[var(--shadow)]">
+      <div className="glass pointer-events-auto flex items-center gap-2 rounded-full px-3 py-2.5 shadow-[var(--shadow)]">
         {/* Compact play / pause */}
         <motion.button
           onClick={togglePlay}
@@ -38,12 +33,6 @@ export function ControlBar() {
             <Play className="h-4 w-4 translate-x-[1px]" strokeWidth={1.5} fill="currentColor" />
           )}
         </motion.button>
-
-        {/* Master volume */}
-        <VolIcon className="h-4 w-4 shrink-0 text-tertiary" strokeWidth={1.5} />
-        <div className="flex-1">
-          <Slider value={masterVolume} onChange={setMasterVolume} ariaLabel="Master volume" />
-        </div>
 
         {/* Enter focus */}
         <motion.button
