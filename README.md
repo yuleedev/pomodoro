@@ -12,13 +12,19 @@ precise, strictly monochrome — built to get out of your way.
   own volume.
 - **Focus sessions** — a built-in Pomodoro-style timer with a distraction-free
   fullscreen mode.
+- **Accounts & cross-device history** *(optional)* — passwordless magic-link
+  sign-in via Supabase. Completed sessions are recorded to your account and show
+  up in a clean history view on any device. Signed out, history is kept locally
+  and synced up the next time you sign in.
 - **Local-first** — your last mix, volumes, timer settings, and theme persist in
-  `localStorage`. Nothing is uploaded; there is no backend.
+  `localStorage`. The core player needs no backend at all; Supabase only adds the
+  optional accounts + synced history.
 
 ## Tech
 
-React + Vite + TypeScript, Web Audio API, Tailwind CSS, Zustand. Icons from
-Lucide. Dependency-light and entirely client-side.
+React + Vite + TypeScript, Web Audio API, Tailwind CSS, Zustand, Supabase (auth +
+Postgres). Icons from Lucide. Dependency-light; the audio player is entirely
+client-side.
 
 ## Run it
 
@@ -37,7 +43,81 @@ npm run preview
 ```
 
 It's a static site — deploy `dist/` to any static host (Vercel, Netlify, GitHub
-Pages, Cloudflare Pages, …). No environment variables, no server required.
+Pages, Cloudflare Pages, …). The core player needs no environment variables and
+no server. To enable accounts + synced history, set the two Supabase env vars
+below.
+
+## Accounts & cross-device history (Supabase)
+
+This is optional. Without it, the app runs fully and Pomodoro history is saved in
+the browser's `localStorage`. Add Supabase to get passwordless sign-in and
+history that follows the user across devices.
+
+### 1. Create a Supabase project
+
+1. Go to [supabase.com](https://supabase.com) → **New project**. Pick a name,
+   a database password (you won't need it for this app), and a region.
+2. Wait for it to finish provisioning.
+
+### 2. Create the table + Row-Level Security
+
+Open **SQL Editor → New query**, paste the contents of
+[`supabase/schema.sql`](./supabase/schema.sql), and **Run**. This creates the
+`pomodoro_sessions` table, enables RLS, and adds policies so each user can only
+read/insert/update/delete **their own** rows. (The file is safe to re-run.)
+
+> ⚠️ RLS is what makes the public anon key safe in the browser. Don't skip it —
+> with RLS off, the anon key could read everyone's data.
+
+### 3. Get your URL + anon key
+
+In **Project Settings → API**, copy:
+
+- **Project URL** → `VITE_SUPABASE_URL`
+- **anon public** key → `VITE_SUPABASE_ANON_KEY`
+
+Create a `.env` file (copy `.env.example`) and fill them in:
+
+```bash
+cp .env.example .env
+# then edit .env:
+# VITE_SUPABASE_URL=https://your-ref.supabase.co
+# VITE_SUPABASE_ANON_KEY=your-anon-public-key
+```
+
+Restart `npm run dev` after editing `.env`. The `VITE_` prefix is required for
+Vite to expose them to the client; only ever put the **anon** key here, never the
+service-role key.
+
+### 4. Configure the magic-link redirect URLs
+
+The sign-in email links back into the app, so Supabase must allow your app's URL.
+In **Authentication → URL Configuration**:
+
+- **Site URL**: your production URL (e.g. `https://yourapp.com`), or
+  `http://localhost:5173` while developing.
+- **Redirect URLs**: add every origin you'll sign in from, e.g.
+  `http://localhost:5173` and `https://yourapp.com`.
+
+The app requests a redirect back to `window.location.origin`, so the origin the
+user signs in from must appear in this list.
+
+Email delivery works out of the box with Supabase's built-in mailer for testing.
+For production volume, configure your own SMTP under **Authentication → Emails**.
+
+### How auth & history behave
+
+- **Sign in**: header → **Sign in** → enter email → open the magic link → you're
+  back in the app, authenticated. The session persists, so you stay signed in
+  across visits and devices.
+- **Recording**: when a focus or break interval completes, a row is written to
+  `pomodoro_sessions` (or to `localStorage` if signed out).
+- **Sync on login**: any sessions saved while signed out are pushed to your
+  account the first time you sign in, then cleared locally.
+- **History view**: the **clock icon** in the header opens it — aggregate stats,
+  sessions grouped by day, delete a single session (inline confirm) or clear all.
+  Deletes hit Supabase directly; RLS guarantees only your rows are affected.
+- **Sign out**: the account avatar (top right) → **Sign out**.
 
 ## Adding your own sounds
 
@@ -105,14 +185,23 @@ Shortcuts are ignored while you're typing in a field.
 
 ```
 public/noise-processor.js   Procedural noise AudioWorklet
+supabase/schema.sql         Table + Row-Level Security policies (run in Supabase)
 src/
   index.css                 Design system: monochrome tokens, typography, base
   audio/
     catalog.ts              The sound library (procedural + configured streams)
     engine.ts               Web Audio graph manager
   config/sources.ts         ← add royalty-free jazz/lofi/ambient streams here
-  state/store.ts            App state (Zustand) + localStorage persistence
+  lib/
+    supabase.ts             Supabase client (from VITE_ env vars; null if unset)
+    history.ts              Session recording: Supabase or localStorage + sync
+    time.ts                 Clock / duration / day-grouping helpers
+  state/
+    store.ts                Player + timer state (Zustand) + localStorage persist
+    auth.ts                 Magic-link auth state
+    ui.ts                   Auth/history overlay open-state
   hooks/useKeyboard.ts      Keyboard shortcuts
-  components/               UI (visualizer, controls, library, mixer, focus mode)
+  components/               UI (visualizer, controls, library, mixer, focus mode,
+                            auth panel, account menu, history view)
   App.tsx                   Layout
 ```

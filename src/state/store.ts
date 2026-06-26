@@ -10,6 +10,7 @@ import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 import { engine } from '../audio/engine'
 import { buildCatalog, type Sound } from '../audio/catalog'
+import { recordSession } from '../lib/history'
 
 export type Theme = 'dark' | 'light'
 export type TimerPhase = 'idle' | 'work' | 'break'
@@ -35,6 +36,8 @@ interface State {
   remainingSec: number
   completedSessions: number
   timerRunning: boolean
+  /** Epoch ms when the current phase began — used as a session's started_at. */
+  phaseStartedAt: number | null
 
   focusMode: boolean
 
@@ -78,6 +81,7 @@ export const useStore = create<State>()(
       remainingSec: 0,
       completedSessions: 0,
       timerRunning: false,
+      phaseStartedAt: null,
 
       focusMode: false,
 
@@ -177,6 +181,7 @@ export const useStore = create<State>()(
             phase: 'work',
             remainingSec: timer.workMinutes * 60,
             completedSessions: 0,
+            phaseStartedAt: Date.now(),
           })
         }
         set({ timerRunning: true })
@@ -196,6 +201,7 @@ export const useStore = create<State>()(
           phase: 'idle',
           remainingSec: 0,
           completedSessions: 0,
+          phaseStartedAt: null,
         })
       },
 
@@ -233,24 +239,65 @@ function startTicking(set: SetFn, get: GetFn) {
       set({ remainingSec: remainingSec - 1 })
       return
     }
-    // Phase boundary reached.
+    // Phase boundary reached — the phase that just ended is a completed session.
+    const startedAt = get().phaseStartedAt
     if (phase === 'work') {
+      logCompleted('focus', timer.workMinutes, startedAt, get)
       const done = completedSessions + 1
       if (done >= timer.sessions) {
         // All sessions complete — wind down.
         void engine.chime(false)
         stopTicking()
-        set({ phase: 'idle', timerRunning: false, remainingSec: 0, completedSessions: done })
+        set({
+          phase: 'idle',
+          timerRunning: false,
+          remainingSec: 0,
+          completedSessions: done,
+          phaseStartedAt: null,
+        })
       } else {
         void engine.chime(false)
-        set({ phase: 'break', remainingSec: timer.breakMinutes * 60, completedSessions: done })
+        set({
+          phase: 'break',
+          remainingSec: timer.breakMinutes * 60,
+          completedSessions: done,
+          phaseStartedAt: Date.now(),
+        })
       }
     } else {
-      // Break finished — back to work.
+      // Break finished — record it, then back to work.
+      logCompleted('break', timer.breakMinutes, startedAt, get)
       void engine.chime(true)
-      set({ phase: 'work', remainingSec: timer.workMinutes * 60 })
+      set({ phase: 'work', remainingSec: timer.workMinutes * 60, phaseStartedAt: Date.now() })
     }
   }, 1000)
+}
+
+/** A human-readable summary of what was playing, for the session's soundscape. */
+function mixDescription(get: GetFn): string | null {
+  const { mix, userFiles } = get()
+  const names = Object.keys(mix)
+    .map((id) => findSound(id, userFiles)?.name)
+    .filter((n): n is string => Boolean(n))
+  return names.length ? names.join(', ') : null
+}
+
+/** Persist a completed focus/break session (Supabase or localStorage). */
+function logCompleted(
+  type: 'focus' | 'break',
+  minutes: number,
+  startedAt: number | null,
+  get: GetFn,
+) {
+  const ended = Date.now()
+  const started = startedAt ?? ended - minutes * 60_000
+  void recordSession({
+    started_at: new Date(started).toISOString(),
+    ended_at: new Date(ended).toISOString(),
+    duration_minutes: minutes,
+    session_type: type,
+    soundscape: mixDescription(get),
+  })
 }
 
 function stopTicking() {
