@@ -3,7 +3,8 @@
  *
  * A grayscale circular progress ring (stroke weight + opacity, never color)
  * wraps big tight-tracked numerals and the active task name. Controls sit
- * below; when idle, compact duration steppers appear. Strictly monochrome.
+ * below; when idle, the Pomodoro/Stopwatch toggle appears. Durations and
+ * automation live in the Settings panel. Strictly monochrome.
  */
 import { AnimatePresence, motion } from 'framer-motion'
 import { Maximize2, Pause, Play, RotateCcw } from 'lucide-react'

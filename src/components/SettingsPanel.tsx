@@ -53,7 +53,7 @@ export function SettingsPanel() {
                 label="Focus"
                 value={timer.workMinutes}
                 min={5}
-                max={120}
+                max={180}
                 step={5}
                 format={(v) => `${v} min`}
                 onChange={(v) => setTimerConfig({ workMinutes: v })}
@@ -62,7 +62,7 @@ export function SettingsPanel() {
                 label="Break"
                 value={timer.breakMinutes}
                 min={1}
-                max={45}
+                max={60}
                 step={1}
                 format={(v) => `${v} min`}
                 onChange={(v) => setTimerConfig({ breakMinutes: v })}
