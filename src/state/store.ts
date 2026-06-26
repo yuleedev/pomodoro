@@ -108,7 +108,10 @@ interface State {
 
   // tasks
   loadTasks: () => Promise<void>
-  addTask: (title: string) => void
+  addTask: (
+    title: string,
+    opts?: { notes?: string; recurrence?: Task['recurrence'] },
+  ) => void
   renameTask: (id: string, title: string) => void
   toggleTask: (id: string) => void
   deleteTask: (id: string) => void
@@ -354,11 +357,12 @@ export const useStore = create<State>()(
         }
       },
 
-      addTask: (title) => {
+      addTask: (title, opts) => {
         const t = title.trim()
         if (!t) return
         const { tasks } = get()
         const position = tasks.reduce((m, x) => Math.max(m, x.position), -1) + 1
+        const notes = opts?.notes?.trim()
         const task: Task = {
           id: crypto.randomUUID(),
           title: t,
@@ -366,6 +370,8 @@ export const useStore = create<State>()(
           session_count: 0,
           position,
           created_at: new Date().toISOString(),
+          recurrence: opts?.recurrence,
+          notes: notes || undefined,
         }
         set({ tasks: [...tasks, task] })
         void createTask(task)

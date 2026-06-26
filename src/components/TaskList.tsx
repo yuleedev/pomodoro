@@ -14,6 +14,7 @@ import { useState } from 'react'
 import { AnimatePresence, motion, Reorder, useDragControls } from 'framer-motion'
 import { Check, GripVertical, Pencil, Plus, Repeat, StickyNote, Trash2 } from 'lucide-react'
 import { useStore } from '../state/store'
+import { spring } from '../lib/motion'
 import type { Task } from '../lib/tasks'
 
 export function TaskList() {
@@ -21,12 +22,22 @@ export function TaskList() {
   const addTask = useStore((s) => s.addTask)
   const reorderTasks = useStore((s) => s.reorderTasks)
   const [draft, setDraft] = useState('')
+  const [notes, setNotes] = useState('')
+  const [repeat, setRepeat] = useState(false)
+  const [expanded, setExpanded] = useState(false)
 
-  const submit = (e: React.FormEvent) => {
-    e.preventDefault()
-    if (!draft.trim()) return
-    addTask(draft)
+  const reset = () => {
     setDraft('')
+    setNotes('')
+    setRepeat(false)
+    setExpanded(false)
+  }
+
+  const submit = (e?: React.FormEvent) => {
+    e?.preventDefault()
+    if (!draft.trim()) return
+    addTask(draft, { notes, recurrence: repeat ? 'daily' : undefined })
+    reset()
   }
 
   const remaining = tasks.filter((t) => !t.completed).length
@@ -40,17 +51,87 @@ export function TaskList() {
         )}
       </div>
 
-      {/* Add task */}
+      {/* Add task - the bar drops down to a notes field + repeat toggle on focus */}
       <form onSubmit={submit} className="mb-4">
-        <div className="glass flex items-center gap-3 rounded-[var(--radius-lg)] px-4 py-3 shadow-[var(--shadow)] transition-all duration-300 ease-[var(--ease-out)] focus-within:scale-[1.005]">
-          <Plus className="h-[18px] w-[18px] shrink-0 text-tertiary" strokeWidth={1.5} />
-          <input
-            value={draft}
-            onChange={(e) => setDraft(e.target.value)}
-            placeholder="Add a task…"
-            className="min-w-0 flex-1 bg-transparent text-[16px] text-content placeholder:text-tertiary focus:outline-none"
-            aria-label="Add a task"
-          />
+        <div className="glass rounded-[var(--radius-lg)] shadow-[var(--shadow)] transition-all duration-300 ease-[var(--ease-out)] focus-within:scale-[1.005]">
+          <div className="flex items-center gap-3 px-4 py-3">
+            <Plus className="h-[18px] w-[18px] shrink-0 text-tertiary" strokeWidth={1.5} />
+            <input
+              value={draft}
+              onChange={(e) => setDraft(e.target.value)}
+              onFocus={() => setExpanded(true)}
+              placeholder="Add a task…"
+              className="min-w-0 flex-1 bg-transparent text-[16px] text-content placeholder:text-tertiary focus:outline-none"
+              aria-label="Add a task"
+            />
+          </div>
+
+          <AnimatePresence initial={false}>
+            {expanded && (
+              <motion.div
+                initial={{ height: 0, opacity: 0 }}
+                animate={{ height: 'auto', opacity: 1 }}
+                exit={{ height: 0, opacity: 0 }}
+                transition={{ duration: 0.2, ease: [0.22, 1, 0.36, 1] }}
+                className="overflow-hidden"
+              >
+                <div className="space-y-3 border-t border-hairline px-4 pb-3.5 pt-3">
+                  <textarea
+                    value={notes}
+                    onChange={(e) => setNotes(e.target.value)}
+                    placeholder="Write any notes here…"
+                    rows={3}
+                    className="block w-full resize-none rounded-[var(--radius-md)] bg-fill px-3 py-2 text-[14px] leading-relaxed text-content placeholder:text-tertiary focus:outline-none focus:ring-1 focus:ring-hairline-strong"
+                    aria-label="Task notes"
+                  />
+
+                  <div className="flex items-center justify-between gap-3">
+                    {/* Repeat every day */}
+                    <button
+                      type="button"
+                      role="switch"
+                      aria-checked={repeat}
+                      onClick={() => setRepeat((r) => !r)}
+                      className="flex items-center gap-2.5 text-[14px] text-secondary transition-colors hover:text-content"
+                    >
+                      <span
+                        className={`relative h-6 w-10 shrink-0 rounded-full transition-colors duration-200 ${
+                          repeat ? 'bg-ink' : 'bg-fill-strong'
+                        }`}
+                      >
+                        <motion.span
+                          className="absolute left-0.5 top-0.5 h-5 w-5 rounded-full bg-elevated shadow-[var(--shadow)]"
+                          animate={{ x: repeat ? 16 : 0 }}
+                          transition={spring}
+                        />
+                      </span>
+                      <span className="flex items-center gap-1.5">
+                        <Repeat className="h-3.5 w-3.5" strokeWidth={1.5} />
+                        Repeat every day
+                      </span>
+                    </button>
+
+                    <div className="flex shrink-0 items-center gap-1">
+                      <button
+                        type="button"
+                        onClick={reset}
+                        className="rounded-full px-3 py-1.5 text-[13px] text-tertiary transition-colors hover:text-content"
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        type="submit"
+                        disabled={!draft.trim()}
+                        className="rounded-full bg-ink px-4 py-1.5 text-[13px] font-medium text-ink-contrast transition-opacity duration-200 disabled:opacity-40"
+                      >
+                        Add task
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
       </form>
 
