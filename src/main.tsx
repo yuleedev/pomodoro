@@ -3,6 +3,7 @@ import { createRoot } from 'react-dom/client'
 import { MotionConfig } from 'framer-motion'
 import './index.css'
 import { App } from './App'
+import { Analytics } from "@vercel/analytics/react"
 
 // One-time migration of pre-rename localStorage keys (soundscape:* → cadence:*)
 // so existing local preferences and history carry over to the new brand.
@@ -30,6 +31,7 @@ createRoot(document.getElementById('root')!).render(
     {/* reducedMotion="user" → all springs below honour prefers-reduced-motion. */}
     <MotionConfig reducedMotion="user">
       <App />
+      <Analytics />
     </MotionConfig>
   </StrictMode>,
 )
