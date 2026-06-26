@@ -18,7 +18,16 @@ const STYLES: { key: TimerStyle; label: string }[] = [
   { key: 'dot', label: 'Dot' },
 ]
 
-const PRESETS = ['#4f7df0', '#2bb3a3', '#3fae6b', '#d6982f', '#e0617a', '#8b6fe0']
+const PRESETS = [
+  '#e0617a', // rose
+  '#f0883e', // amber
+  '#e6b800', // gold
+  '#3fae6b', // green
+  '#2bb3a3', // teal
+  '#4f7df0', // blue
+  '#8b6fe0', // violet
+  '#c061c9', // magenta
+]
 
 export function CustomizePanel() {
   const close = useUI((s) => s.closeCustomize)
@@ -96,9 +105,12 @@ export function CustomizePanel() {
           </div>
         </Section>
 
-        {/* Accent */}
-        <Section title="Accent">
-          <div className="flex flex-wrap items-center gap-3">
+        {/* Color theme */}
+        <Section title="Color theme">
+          {/* Live preview of the whole-app tint for the current selection */}
+          <ThemePreview accent={accent} />
+
+          <div className="mt-4 flex flex-wrap items-center gap-3">
             {/* Monochrome (default) */}
             <Swatch
               selected={accent === null}
@@ -150,14 +162,56 @@ export function CustomizePanel() {
             </label>
           </div>
           <p className="mt-3 text-[12px] leading-relaxed text-tertiary">
-            Pick a preset, or tap{' '}
+            Your color tints the entire app — background, text, and controls — not
+            just the ring. Tap{' '}
             <span className="inline-flex h-4 w-4 -translate-y-px items-center justify-center rounded-full border border-dashed border-hairline-strong align-middle">
               <Plus className="h-2.5 w-2.5" strokeWidth={2} />
             </span>{' '}
-            to add your own. Monochrome keeps the original black-and-white look.
+            to add your own, or pick Monochrome for the original black-and-white look.
           </p>
         </Section>
       </div>
+    </div>
+  )
+}
+
+/* A miniature of the app rendered with the live semantic tokens, so it shows
+   exactly how the current color tints the background, text, and controls. */
+function ThemePreview({ accent }: { accent: string | null }) {
+  return (
+    <div className="flex items-center gap-3 rounded-[var(--radius-lg)] border border-hairline bg-bg p-3">
+      {/* Mini timer ring + play */}
+      <div className="relative grid h-12 w-12 shrink-0 place-items-center">
+        <span
+          className="absolute inset-0 rounded-full border-2"
+          style={{ borderColor: 'var(--fill-strong)' }}
+        />
+        <span
+          className="absolute inset-0 rounded-full border-2 border-transparent"
+          style={{ borderTopColor: 'var(--accent)', transform: 'rotate(45deg)' }}
+        />
+        <span className="grid h-7 w-7 place-items-center rounded-full bg-ink">
+          <span
+            className="ml-0.5 h-0 w-0 border-y-[4px] border-l-[6px] border-y-transparent"
+            style={{ borderLeftColor: 'var(--ink-contrast)' }}
+          />
+        </span>
+      </div>
+
+      {/* Mini text + chips */}
+      <div className="min-w-0 flex-1">
+        <div className="h-2.5 w-20 rounded-full bg-content" />
+        <div className="mt-1.5 h-2 w-28 rounded-full bg-secondary opacity-70" />
+        <div className="mt-2.5 flex items-center gap-1.5">
+          <span className="h-1.5 w-1.5 rounded-full" style={{ backgroundColor: 'var(--accent)' }} />
+          <span className="h-1.5 w-1.5 rounded-full" style={{ backgroundColor: 'var(--accent)' }} />
+          <span className="h-1.5 w-1.5 rounded-full bg-fill-strong" />
+        </div>
+      </div>
+
+      <span className="shrink-0 text-[11px] tabular-nums text-tertiary">
+        {accent ? accent.toUpperCase() : 'Mono'}
+      </span>
     </div>
   )
 }

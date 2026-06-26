@@ -19,6 +19,12 @@ import {
   updateTask,
   type Task,
 } from '../lib/tasks'
+import {
+  createCategory,
+  deleteCategoryRow,
+  fetchCategories,
+  type Category,
+} from '../lib/categories'
 
 export type Theme = 'dark' | 'light'
 export type TimerPhase = 'idle' | 'work' | 'break'
@@ -66,6 +72,11 @@ interface State {
   /** The task the timer is currently running "against". */
   selectedTaskId: string | null
 
+  /** Optional categories for tracking focus hours by area. */
+  categories: Category[]
+  /** The category completed focus sessions count toward (null = untracked). */
+  activeCategoryId: string | null
+
   // ── actions ──────────────────────────────────────────────────────────────
   toggleTheme: () => void
   setTheme: (theme: Theme) => void
@@ -96,6 +107,12 @@ interface State {
   reorderTasks: (ordered: Task[]) => void
   selectTask: (id: string | null) => void
   bumpActiveTaskSession: () => void
+
+  // categories
+  loadCategories: () => Promise<void>
+  addCategory: (name: string) => void
+  deleteCategory: (id: string) => void
+  selectCategory: (id: string | null) => void
 }
 
 /** Resolve a sound by id from the built-in catalog. */
@@ -107,13 +124,20 @@ function findSound(id: string): Sound | undefined {
 let tickHandle: number | null = null
 
 /**
- * Set (or clear) the global --accent CSS variable. When null, the variable is
- * removed so it falls back to the stylesheet default (the monochrome ink tone).
+ * Set (or clear) the accent. When a color is given we set the global --accent
+ * variable AND add the `.tinted` class, which re-derives the entire palette
+ * from that color (see index.css). When null, both are cleared so the UI falls
+ * back to the monochrome black-and-white stylesheet default.
  */
 function applyAccent(color: string | null) {
   const root = document.documentElement
-  if (color) root.style.setProperty('--accent', color)
-  else root.style.removeProperty('--accent')
+  if (color) {
+    root.style.setProperty('--accent', color)
+    root.classList.add('tinted')
+  } else {
+    root.style.removeProperty('--accent')
+    root.classList.remove('tinted')
+  }
 }
 
 export const useStore = create<State>()(
@@ -141,6 +165,9 @@ export const useStore = create<State>()(
 
       tasks: [],
       selectedTaskId: null,
+
+      categories: [],
+      activeCategoryId: null,
 
       toggleTheme: () => get().setTheme(get().theme === 'dark' ? 'light' : 'dark'),
 
@@ -356,6 +383,45 @@ export const useStore = create<State>()(
         set({ tasks: tasks.map((x) => (x.id === task.id ? updated : x)) })
         void updateTask(updated)
       },
+
+      // ── categories ──────────────────────────────────────────────────────────
+      loadCategories: async () => {
+        try {
+          set({ categories: await fetchCategories() })
+        } catch {
+          /* keep whatever we have */
+        }
+      },
+
+      addCategory: (name) => {
+        const n = name.trim()
+        if (!n) return
+        const { categories } = get()
+        // Avoid duplicates (case-insensitive).
+        if (categories.some((c) => c.name.toLowerCase() === n.toLowerCase())) return
+        const position = categories.reduce((m, x) => Math.max(m, x.position), -1) + 1
+        const category: Category = {
+          id: crypto.randomUUID(),
+          name: n,
+          position,
+          created_at: new Date().toISOString(),
+        }
+        set({ categories: [...categories, category], activeCategoryId: category.id })
+        void createCategory(category)
+      },
+
+      deleteCategory: (id) => {
+        const { categories, activeCategoryId } = get()
+        set({
+          categories: categories.filter((c) => c.id !== id),
+          activeCategoryId: activeCategoryId === id ? null : activeCategoryId,
+        })
+        void deleteCategoryRow(id)
+      },
+
+      // Toggle selection: clicking the active category again deselects it.
+      selectCategory: (id) =>
+        set({ activeCategoryId: get().activeCategoryId === id ? null : id }),
     }),
     {
       name: 'cadence:state',
@@ -367,6 +433,7 @@ export const useStore = create<State>()(
         timer: s.timer,
         timerMode: s.timerMode,
         selectedTaskId: s.selectedTaskId,
+        activeCategoryId: s.activeCategoryId,
         timerStyle: s.timerStyle,
         accent: s.accent,
         customSwatches: s.customSwatches,

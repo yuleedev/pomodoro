@@ -12,15 +12,28 @@
     />
     <title>Cadence — focus timer</title>
     <script>
-      // Apply the saved theme before first paint to avoid a flash of the wrong
-      // background. Dark mode is the default.
+      // Apply the saved theme AND accent tint before first paint to avoid a
+      // flash of the wrong background. Dark mode is the default.
       (function () {
+        var root = document.documentElement;
         try {
           var saved = localStorage.getItem('cadence:theme');
           var theme = saved === 'light' || saved === 'dark' ? saved : 'dark';
-          document.documentElement.classList.toggle('dark', theme === 'dark');
+          root.classList.toggle('dark', theme === 'dark');
         } catch (e) {
           /* localStorage unavailable — keep the default dark class */
+        }
+        try {
+          // Mirror the store's applyAccent(): set --accent + .tinted so the
+          // whole palette is derived from the saved color on first paint.
+          var persisted = JSON.parse(localStorage.getItem('cadence:state'));
+          var accent = persisted && persisted.state && persisted.state.accent;
+          if (accent) {
+            root.style.setProperty('--accent', accent);
+            root.classList.add('tinted');
+          }
+        } catch (e) {
+          /* no/invalid persisted state — stay monochrome */
         }
       })();
     </script>

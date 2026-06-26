@@ -22,6 +22,8 @@ export interface SessionRecord {
   duration_minutes: number
   session_type: 'focus' | 'break'
   soundscape: string | null
+  /** Optional category name this session counts toward (for per-area hours). */
+  category: string | null
   created_at: string
 }
 
@@ -121,6 +123,7 @@ export async function syncLocalSessions(userId: string): Promise<number> {
       duration_minutes: r.duration_minutes,
       session_type: r.session_type,
       soundscape: r.soundscape,
+      category: r.category ?? null,
     }))
     const { error } = await supabase.from('pomodoro_sessions').insert(rows)
     if (error) {

@@ -11,7 +11,7 @@
 import type { SessionRecord } from './history'
 
 const LOCAL_KEY = 'cadence:sessions'
-const WEEKS = 18
+const WEEKS = 53 // a full year, so the year heatmap + year chart fill in
 
 const SOUNDS: (string | null)[] = [
   'Rain',
