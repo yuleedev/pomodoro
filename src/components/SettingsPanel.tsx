@@ -1,8 +1,9 @@
 /*
  * Settings panel - timer intervals and automation, opened from the top bar.
- * Focus / break / rounds are set with draggable bars; the automation toggles
- * decide whether the next phase starts on its own or waits for you.
+ * Focus / break / rounds are set with a draggable bar or by typing a value;
+ * the automation toggles decide whether the next phase starts on its own.
  */
+import { useEffect, useState } from 'react'
 import { motion } from 'framer-motion'
 import { X } from 'lucide-react'
 import { useStore } from '../state/store'
@@ -55,7 +56,7 @@ export function SettingsPanel() {
                 min={5}
                 max={180}
                 step={5}
-                format={(v) => `${v} min`}
+                unit="min"
                 onChange={(v) => setTimerConfig({ workMinutes: v })}
               />
               <RangeRow
@@ -64,7 +65,7 @@ export function SettingsPanel() {
                 min={1}
                 max={60}
                 step={1}
-                format={(v) => `${v} min`}
+                unit="min"
                 onChange={(v) => setTimerConfig({ breakMinutes: v })}
               />
               <RangeRow
@@ -73,7 +74,7 @@ export function SettingsPanel() {
                 min={1}
                 max={12}
                 step={1}
-                format={(v) => `${v}×`}
+                unit="×"
                 onChange={(v) => setTimerConfig({ sessions: v })}
               />
             </div>
@@ -119,7 +120,7 @@ function RangeRow({
   min,
   max,
   step,
-  format,
+  unit,
   onChange,
 }: {
   label: string
@@ -127,15 +128,57 @@ function RangeRow({
   min: number
   max: number
   step: number
-  format: (v: number) => string
+  unit: string
   onChange: (v: number) => void
 }) {
+  // Local text state lets you clear the field and type freely; we sync back
+  // whenever the value changes (e.g. by dragging the slider).
+  const [text, setText] = useState(String(value))
+  useEffect(() => setText(String(value)), [value])
+
+  const clamp = (n: number) => Math.min(max, Math.max(min, n))
+
+  // Commit on blur/Enter: snap an out-of-range or empty entry back to a valid value.
+  const commit = (raw: string) => {
+    const n = Math.round(Number(raw))
+    if (raw.trim() === '' || !Number.isFinite(n)) {
+      setText(String(value))
+      return
+    }
+    const next = clamp(n)
+    onChange(next)
+    setText(String(next))
+  }
+
   const pct = Math.round(((value - min) / (max - min)) * 100)
   return (
     <div>
       <div className="mb-2.5 flex items-baseline justify-between">
         <span className="text-[15px] text-content">{label}</span>
-        <span className="text-[15px] font-medium tabular-nums text-content">{format(value)}</span>
+        <div className="flex items-baseline gap-1">
+          <input
+            type="number"
+            inputMode="numeric"
+            min={min}
+            max={max}
+            value={text}
+            aria-label={`${label} value`}
+            onChange={(e) => {
+              setText(e.target.value)
+              // Live-apply while typing, but only when it's a valid in-range number.
+              const n = Number(e.target.value)
+              if (e.target.value.trim() !== '' && Number.isFinite(n) && n >= min && n <= max) {
+                onChange(Math.round(n))
+              }
+            }}
+            onBlur={(e) => commit(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') (e.target as HTMLInputElement).blur()
+            }}
+            className="w-14 rounded-[var(--radius-md)] bg-fill px-2 py-1 text-right text-[15px] font-medium tabular-nums text-content outline-none transition-shadow focus:ring-1 focus:ring-hairline-strong [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+          />
+          <span className="text-[15px] font-medium text-tertiary">{unit}</span>
+        </div>
       </div>
       <input
         type="range"
