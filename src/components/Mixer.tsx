@@ -27,8 +27,7 @@ export function Mixer() {
 
       {active.length === 0 ? (
         <p className="text-[13px] leading-relaxed text-tertiary">
-          Nothing playing yet. Pick a sound to start, or describe your focus above
-          and let the assistant build a mix.
+          Nothing playing yet. Pick a sound above to start your mix.
         </p>
       ) : (
         <ul className="space-y-1">

@@ -10,7 +10,6 @@ import { FocusCard } from './components/FocusCard'
 import { FocusMode } from './components/FocusMode'
 import { Header } from './components/Header'
 import { Mixer } from './components/Mixer'
-import { PlayButton } from './components/PlayButton'
 import { SoundLibrary } from './components/SoundLibrary'
 import { useKeyboard } from './hooks/useKeyboard'
 import { useStore } from './state/store'
@@ -24,11 +23,11 @@ export function App() {
       <div className="mx-auto w-full max-w-xl px-5 pb-40">
         <Header />
 
-        {/* Hero — the focal point: breathing circle behind the play control. */}
-        <section className="relative flex flex-col items-center pt-6 pb-14">
-          <div className="relative grid aspect-square w-full max-w-[340px] place-items-center">
+        {/* Hero — the signature breathing visualizer. Playback is driven from
+            the frosted control bar at the bottom. */}
+        <section className="relative flex flex-col items-center pt-2 pb-12">
+          <div className="relative aspect-square w-full max-w-[260px]">
             <BreathingVisualizer />
-            <PlayButton />
           </div>
         </section>
 
