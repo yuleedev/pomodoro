@@ -6,11 +6,11 @@
  * below; when idle, compact duration steppers appear. Strictly monochrome.
  */
 import { useState } from 'react'
-import { motion } from 'framer-motion'
+import { AnimatePresence, motion } from 'framer-motion'
 import { Maximize2, Minus, Pause, Play, Plus, RotateCcw } from 'lucide-react'
 import { useStore } from '../state/store'
 import { formatClock } from '../lib/time'
-import { spring, tapScale } from '../lib/motion'
+import { popSpring, softSpring, spring, tapScale } from '../lib/motion'
 import { TimerRing } from './TimerRing'
 
 export function TimerHero() {
@@ -52,7 +52,19 @@ export function TimerHero() {
 
       {/* Ring + numerals */}
       <div className="relative aspect-square w-full max-w-[320px]">
-        <TimerRing fraction={fraction} style={timerStyle} />
+        {/* Swap ring shapes with a springy pop when the style changes. */}
+        <AnimatePresence>
+          <motion.div
+            key={timerStyle}
+            className="absolute inset-0"
+            initial={{ opacity: 0, scale: 0.82 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.82 }}
+            transition={popSpring}
+          >
+            <TimerRing fraction={fraction} style={timerStyle} />
+          </motion.div>
+        </AnimatePresence>
 
         {/* Center content */}
         <div className="absolute inset-0 flex flex-col items-center justify-center px-8 text-center">
@@ -109,7 +121,8 @@ export function TimerHero() {
         </GhostBtn>
       </div>
 
-      {/* Mode toggle: Pomodoro countdown vs. count-up stopwatch (idle only) */}
+      {/* Mode toggle: Pomodoro countdown vs. count-up stopwatch (idle only).
+          The active pill slides between options with a spring (layoutId). */}
       {idle && (
         <div className="mt-8 inline-flex rounded-full border border-hairline p-0.5">
           {(['pomodoro', 'stopwatch'] as const).map((m) => (
@@ -117,50 +130,70 @@ export function TimerHero() {
               key={m}
               onClick={() => setTimerMode(m)}
               aria-pressed={mode === m}
-              className={`rounded-full px-4 py-1.5 text-[13px] capitalize tracking-wide transition-colors duration-200 ${
-                mode === m
-                  ? 'bg-ink text-ink-contrast'
-                  : 'text-secondary hover:text-content'
-              }`}
+              className="relative rounded-full px-4 py-1.5 text-[13px] capitalize tracking-wide"
             >
-              {m}
+              {mode === m && (
+                <motion.span
+                  layoutId="modePill"
+                  transition={spring}
+                  className="absolute inset-0 rounded-full bg-ink"
+                />
+              )}
+              <span
+                className={`relative z-10 transition-colors duration-200 ${
+                  mode === m ? 'text-ink-contrast' : 'text-secondary hover:text-content'
+                }`}
+              >
+                {m}
+              </span>
             </button>
           ))}
         </div>
       )}
 
-      {/* Duration steppers (Pomodoro, idle only) */}
-      {idle && !stopwatch && (
-        <div className="mt-7 grid w-full max-w-sm grid-cols-3 gap-3">
-          <Stepper
-            label="Focus"
-            unit="min"
-            value={timer.workMinutes}
-            min={5}
-            max={180}
-            step={5}
-            onChange={(v) => setTimerConfig({ workMinutes: v })}
-          />
-          <Stepper
-            label="Break"
-            unit="min"
-            value={timer.breakMinutes}
-            min={1}
-            max={60}
-            step={1}
-            onChange={(v) => setTimerConfig({ breakMinutes: v })}
-          />
-          <Stepper
-            label="Rounds"
-            unit="×"
-            value={timer.sessions}
-            min={1}
-            max={12}
-            step={1}
-            onChange={(v) => setTimerConfig({ sessions: v })}
-          />
-        </div>
-      )}
+      {/* Duration steppers (Pomodoro, idle only) — collapse/expand on mode switch. */}
+      <AnimatePresence initial={false}>
+        {idle && !stopwatch && (
+          <motion.div
+            key="steppers"
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: 'auto' }}
+            exit={{ opacity: 0, height: 0 }}
+            transition={softSpring}
+            className="w-full max-w-sm overflow-hidden"
+          >
+            <div className="mt-7 grid grid-cols-3 gap-3">
+              <Stepper
+                label="Focus"
+                unit="min"
+                value={timer.workMinutes}
+                min={5}
+                max={180}
+                step={5}
+                onChange={(v) => setTimerConfig({ workMinutes: v })}
+              />
+              <Stepper
+                label="Break"
+                unit="min"
+                value={timer.breakMinutes}
+                min={1}
+                max={60}
+                step={1}
+                onChange={(v) => setTimerConfig({ breakMinutes: v })}
+              />
+              <Stepper
+                label="Rounds"
+                unit="×"
+                value={timer.sessions}
+                min={1}
+                max={12}
+                step={1}
+                onChange={(v) => setTimerConfig({ sessions: v })}
+              />
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </section>
   )
 }

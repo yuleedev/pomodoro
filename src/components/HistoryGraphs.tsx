@@ -117,7 +117,11 @@ function Heatmap({ byDay }: { byDay: Map<string, number> }) {
   return (
     <div>
       <SectionTitle>Activity · past year</SectionTitle>
-      <div ref={scrollRef} className="overflow-x-auto pb-1">
+      <div
+        ref={scrollRef}
+        className="overflow-x-auto overflow-y-hidden overscroll-x-contain pb-1"
+        style={{ touchAction: 'pan-x' }}
+      >
         <div className="inline-flex flex-col gap-1.5">
           {/* Month labels */}
           <div className="flex gap-[3px] pl-[26px]">

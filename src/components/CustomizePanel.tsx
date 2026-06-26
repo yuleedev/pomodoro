@@ -10,7 +10,7 @@ import { motion } from 'framer-motion'
 import { Check, Moon, Plus, Sun, X } from 'lucide-react'
 import { useStore, type TimerStyle } from '../state/store'
 import { useUI } from '../state/ui'
-import { popSpring } from '../lib/motion'
+import { popSpring, spring, tapScale } from '../lib/motion'
 import { TimerRing } from './TimerRing'
 
 const STYLES: { key: TimerStyle; label: string }[] = [
@@ -58,7 +58,7 @@ export function CustomizePanel() {
         initial={{ opacity: 0, y: 24, scale: 0.96 }}
         animate={{ opacity: 1, y: 0, scale: 1 }}
         transition={popSpring}
-        className="glass relative m-3 w-full max-w-md rounded-[var(--radius-2xl)] p-6 shadow-[var(--shadow)]"
+        className="relative m-3 w-full max-w-md rounded-[var(--radius-2xl)] border border-hairline bg-elevated p-6 shadow-[var(--shadow)]"
       >
         <div className="mb-6 flex items-center justify-between">
           <h2 className="text-[20px] font-medium tracking-tight text-content">Customize</h2>
@@ -93,23 +93,33 @@ export function CustomizePanel() {
         <Section title="Timer style">
           <div className="grid grid-cols-4 gap-3">
             {STYLES.map((s) => (
-              <button
+              <motion.button
                 key={s.key}
                 onClick={() => setTimerStyle(s.key)}
                 aria-pressed={timerStyle === s.key}
-                className={`flex flex-col items-center gap-2 rounded-[var(--radius-lg)] p-2 transition-all duration-200 active:scale-95 ${
-                  timerStyle === s.key ? 'bg-fill ring-1 ring-hairline-strong' : 'hover:bg-fill'
-                }`}
+                whileTap={tapScale}
+                transition={spring}
+                className="relative flex flex-col items-center gap-2 rounded-[var(--radius-lg)] p-2 hover:bg-fill"
               >
-                <span className="relative h-12 w-12">
+                {/* Sliding selection highlight that springs between styles. */}
+                {timerStyle === s.key && (
+                  <motion.span
+                    layoutId="styleSel"
+                    transition={spring}
+                    className="absolute inset-0 rounded-[var(--radius-lg)] bg-fill ring-1 ring-hairline-strong"
+                  />
+                )}
+                <span className="relative z-10 h-12 w-12">
                   <TimerRing fraction={0.66} style={s.key} />
                 </span>
                 <span
-                  className={`text-[12px] ${timerStyle === s.key ? 'text-content' : 'text-tertiary'}`}
+                  className={`relative z-10 text-[12px] ${
+                    timerStyle === s.key ? 'text-content' : 'text-tertiary'
+                  }`}
                 >
                   {s.label}
                 </span>
-              </button>
+              </motion.button>
             ))}
           </div>
         </Section>

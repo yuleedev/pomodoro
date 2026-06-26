@@ -100,7 +100,7 @@ export function HistoryView() {
         className="mx-auto w-full max-w-xl px-5 pb-24"
       >
         {/* Header */}
-        <header className="sticky top-0 z-10 -mx-5 flex items-center justify-between bg-bg/80 px-5 py-6 backdrop-blur">
+        <header className="sticky top-0 z-10 -mx-5 flex items-center justify-between bg-bg px-5 py-6">
           <h1 className="text-[26px] font-medium tracking-tight text-content">History</h1>
           <div className="flex items-center gap-2">
             {/* DEV-ONLY preview helper - remove with src/lib/seed.ts */}
