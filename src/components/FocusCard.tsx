@@ -27,7 +27,7 @@ export function FocusCard() {
 
   return (
     <section className="w-full">
-      <h2 className="mb-4 flex items-center gap-2 text-[13px] font-medium uppercase tracking-[0.14em] text-tertiary">
+      <h2 className="mb-4 flex items-center gap-2 text-[14px] font-medium uppercase tracking-[0.14em] text-tertiary">
         <TimerIcon className="h-4 w-4" strokeWidth={1.5} />
         Focus session
       </h2>
@@ -67,17 +67,17 @@ export function FocusCard() {
 
             <button
               onClick={startTimer}
-              className="mt-5 w-full rounded-full bg-ink py-3 text-[14px] font-medium text-ink-contrast transition-all duration-200 ease-[var(--ease-out)] hover:opacity-90 active:scale-[0.98]"
+              className="mt-5 w-full rounded-full bg-ink py-3 text-[15px] font-medium text-ink-contrast transition-all duration-200 ease-[var(--ease-out)] hover:opacity-90 active:scale-[0.98]"
             >
               Begin focus
             </button>
           </>
         ) : (
           <div className="flex flex-col items-center gap-5 py-1">
-            <span className="text-[11px] uppercase tracking-[0.3em] text-tertiary">
+            <span className="text-[12px] uppercase tracking-[0.3em] text-tertiary">
               {phase === 'work' ? 'Focus' : 'Break'}
             </span>
-            <span className="text-[56px] font-light leading-none tabular-nums text-content">
+            <span className="text-[60px] font-light leading-none tabular-nums text-content">
               {formatClock(remainingSec)}
             </span>
 
@@ -139,14 +139,14 @@ function Stepper({
   const inc = () => onChange(Math.min(max, value + step))
   return (
     <div className="flex flex-col items-center gap-2">
-      <span className="text-[11px] uppercase tracking-[0.1em] text-tertiary">{label}</span>
+      <span className="text-[12px] uppercase tracking-[0.1em] text-tertiary">{label}</span>
       <div className="flex items-center gap-2">
         <SmallBtn onClick={dec} disabled={value <= min} label={`Decrease ${label}`}>
           <Minus className="h-3.5 w-3.5" strokeWidth={2} />
         </SmallBtn>
-        <span className="w-10 text-center text-[20px] font-medium tabular-nums text-content">
+        <span className="w-10 text-center text-[22px] font-medium tabular-nums text-content">
           {value}
-          <span className="ml-0.5 text-[11px] text-tertiary">{unit}</span>
+          <span className="ml-0.5 text-[12px] text-tertiary">{unit}</span>
         </span>
         <SmallBtn onClick={inc} disabled={value >= max} label={`Increase ${label}`}>
           <Plus className="h-3.5 w-3.5" strokeWidth={2} />

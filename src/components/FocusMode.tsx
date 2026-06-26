@@ -41,10 +41,10 @@ export function FocusMode() {
       </button>
 
       {/* Phase label */}
-      <p className="mb-6 text-[13px] uppercase tracking-[0.35em] text-tertiary">{label}</p>
+      <p className="mb-6 text-[14px] uppercase tracking-[0.35em] text-tertiary">{label}</p>
 
       {/* The clock — the single focal point */}
-      <div className="select-none text-[18vw] font-light leading-none tracking-tight tabular-nums text-content sm:text-[120px]">
+      <div className="select-none text-[18vw] font-light leading-none tracking-tight tabular-nums text-content sm:text-[130px]">
         {isIdle ? formatClock(timer.workMinutes * 60) : formatClock(remainingSec)}
       </div>
 
@@ -78,7 +78,7 @@ export function FocusMode() {
         </ControlBtn>
       </div>
 
-      <p className="absolute bottom-8 text-[12px] text-tertiary">Press Esc to exit</p>
+      <p className="absolute bottom-8 text-[13px] text-tertiary">Press Esc to exit</p>
     </div>
   )
 }

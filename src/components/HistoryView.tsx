@@ -78,7 +78,7 @@ export function HistoryView() {
       <div className="mx-auto w-full max-w-xl px-5 pb-24">
         {/* Header */}
         <header className="sticky top-0 z-10 -mx-5 flex items-center justify-between bg-bg/80 px-5 py-6 backdrop-blur">
-          <h1 className="text-[22px] font-medium tracking-tight text-content">History</h1>
+          <h1 className="text-[24px] font-medium tracking-tight text-content">History</h1>
           <button
             onClick={close}
             aria-label="Close history"
@@ -106,7 +106,7 @@ export function HistoryView() {
             {configured && authStatus === 'signed_out' && hasAny && (
               <button
                 onClick={openAuth}
-                className="mb-8 w-full rounded-[var(--radius-lg)] border border-hairline px-4 py-3 text-left text-[13px] text-secondary transition-colors duration-200 hover:bg-fill hover:text-content"
+                className="mb-8 w-full rounded-[var(--radius-lg)] border border-hairline px-4 py-3 text-left text-[14px] text-secondary transition-colors duration-200 hover:bg-fill hover:text-content"
               >
                 These sessions are saved on this device.{' '}
                 <span className="text-content underline underline-offset-4">Sign in</span> to sync
@@ -115,7 +115,7 @@ export function HistoryView() {
             )}
 
             {error && (
-              <p className="mb-6 text-[13px] leading-relaxed text-secondary">{error}</p>
+              <p className="mb-6 text-[14px] leading-relaxed text-secondary">{error}</p>
             )}
 
             {/* List or empty state */}
@@ -125,7 +125,7 @@ export function HistoryView() {
               <>
                 {groups.map((group) => (
                   <section key={group.key} className="mb-8">
-                    <h2 className="mb-1 text-[12px] font-medium uppercase tracking-[0.14em] text-tertiary">
+                    <h2 className="mb-1 text-[13px] font-medium uppercase tracking-[0.14em] text-tertiary">
                       {group.label}
                     </h2>
                     <ul>
@@ -139,7 +139,7 @@ export function HistoryView() {
                 {/* Clear all */}
                 <div className="mt-10 flex justify-center">
                   {confirmClear ? (
-                    <div className="flex items-center gap-3 text-[13px]">
+                    <div className="flex items-center gap-3 text-[14px]">
                       <span className="text-secondary">Delete all history?</span>
                       <button
                         onClick={onClearAll}
@@ -157,7 +157,7 @@ export function HistoryView() {
                   ) : (
                     <button
                       onClick={() => setConfirmClear(true)}
-                      className="text-[13px] text-tertiary underline-offset-4 transition-colors hover:text-content hover:underline"
+                      className="text-[14px] text-tertiary underline-offset-4 transition-colors hover:text-content hover:underline"
                     >
                       Clear all history
                     </button>
@@ -175,10 +175,10 @@ export function HistoryView() {
 function Stat({ value, label }: { value: string; label: string }) {
   return (
     <div className="flex flex-col">
-      <span className="text-[28px] font-light leading-none tracking-tight tabular-nums text-content">
+      <span className="text-[30px] font-light leading-none tracking-tight tabular-nums text-content">
         {value}
       </span>
-      <span className="mt-2 text-[11px] uppercase tracking-[0.1em] text-tertiary">{label}</span>
+      <span className="mt-2 text-[12px] uppercase tracking-[0.1em] text-tertiary">{label}</span>
     </div>
   )
 }
@@ -188,21 +188,21 @@ function Row({ session, onDelete }: { session: SessionRecord; onDelete: () => vo
   const [confirm, setConfirm] = useState(false)
   return (
     <li className="group flex items-center gap-3 border-b border-hairline py-3.5 last:border-b-0">
-      <span className="w-16 shrink-0 text-[13px] tabular-nums text-secondary">
+      <span className="w-16 shrink-0 text-[14px] tabular-nums text-secondary">
         {timeLabel(session.started_at)}
       </span>
       <div className="min-w-0 flex-1">
-        <span className="text-[14px] text-content">
+        <span className="text-[15px] text-content">
           {session.session_type === 'break' ? 'Break' : 'Focus'}
           <span className="text-tertiary"> · {formatDuration(session.duration_minutes)}</span>
         </span>
         {session.soundscape && (
-          <p className="truncate text-[12px] text-tertiary">{session.soundscape}</p>
+          <p className="truncate text-[13px] text-tertiary">{session.soundscape}</p>
         )}
       </div>
 
       {confirm ? (
-        <div className="flex items-center gap-2 text-[12px]">
+        <div className="flex items-center gap-2 text-[13px]">
           <button
             onClick={onDelete}
             className="rounded-full bg-ink px-3 py-1 font-medium text-ink-contrast transition-opacity hover:opacity-90"
@@ -233,8 +233,8 @@ function Row({ session, onDelete }: { session: SessionRecord; onDelete: () => vo
 function EmptyState() {
   return (
     <div className="grid place-items-center py-28 text-center">
-      <p className="text-[16px] text-content">No sessions yet</p>
-      <p className="mt-2 max-w-[16rem] text-[13px] leading-relaxed text-tertiary">
+      <p className="text-[17px] text-content">No sessions yet</p>
+      <p className="mt-2 max-w-[16rem] text-[14px] leading-relaxed text-tertiary">
         Finish a focus session and it’ll appear here — quietly tracked, just for you.
       </p>
     </div>

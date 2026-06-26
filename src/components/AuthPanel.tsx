@@ -53,8 +53,8 @@ export function AuthPanel() {
         {!configured ? (
           // Graceful state when the build has no Supabase env configured.
           <>
-            <h1 className="text-[26px] font-medium tracking-tight text-content">Sign-in unavailable</h1>
-            <p className="mx-auto mt-4 max-w-xs text-[14px] leading-relaxed text-secondary">
+            <h1 className="text-[28px] font-medium tracking-tight text-content">Sign-in unavailable</h1>
+            <p className="mx-auto mt-4 max-w-xs text-[15px] leading-relaxed text-secondary">
               This build isn’t connected to Supabase yet. Your history is still
               saved on this device. See the README to enable accounts.
             </p>
@@ -65,8 +65,8 @@ export function AuthPanel() {
             <div className="mx-auto mb-7 grid h-14 w-14 place-items-center rounded-full bg-fill text-content">
               <Mail className="h-6 w-6" strokeWidth={1.5} />
             </div>
-            <h1 className="text-[26px] font-medium tracking-tight text-content">Check your email</h1>
-            <p className="mx-auto mt-4 max-w-xs text-[14px] leading-relaxed text-secondary">
+            <h1 className="text-[28px] font-medium tracking-tight text-content">Check your email</h1>
+            <p className="mx-auto mt-4 max-w-xs text-[15px] leading-relaxed text-secondary">
               We sent a sign-in link to{' '}
               <span className="text-content">{email.trim()}</span>. Open it on any
               device to finish signing in.
@@ -76,7 +76,7 @@ export function AuthPanel() {
                 setSent(false)
                 setError(null)
               }}
-              className="mt-8 text-[13px] text-tertiary underline-offset-4 transition-colors hover:text-content hover:underline"
+              className="mt-8 text-[14px] text-tertiary underline-offset-4 transition-colors hover:text-content hover:underline"
             >
               Use a different email
             </button>
@@ -84,8 +84,8 @@ export function AuthPanel() {
         ) : (
           // The sign-in form.
           <>
-            <h1 className="text-[28px] font-medium tracking-tight text-content">Sign in</h1>
-            <p className="mx-auto mt-3 max-w-xs text-[14px] leading-relaxed text-secondary">
+            <h1 className="text-[30px] font-medium tracking-tight text-content">Sign in</h1>
+            <p className="mx-auto mt-3 max-w-xs text-[15px] leading-relaxed text-secondary">
               We’ll email you a magic link — no password needed.
             </p>
 
@@ -102,7 +102,7 @@ export function AuthPanel() {
                   }}
                   onKeyDown={(e) => e.key === 'Enter' && submit()}
                   placeholder="you@example.com"
-                  className="min-w-0 flex-1 bg-transparent text-[15px] text-content placeholder:text-tertiary focus:outline-none"
+                  className="min-w-0 flex-1 bg-transparent text-[16px] text-content placeholder:text-tertiary focus:outline-none"
                   aria-label="Email address"
                 />
               </div>
@@ -110,7 +110,7 @@ export function AuthPanel() {
               <button
                 onClick={submit}
                 disabled={!valid || sending}
-                className="mt-3 flex w-full items-center justify-center gap-2 rounded-full bg-ink py-3.5 text-[14px] font-medium text-ink-contrast transition-all duration-200 ease-[var(--ease-out)] hover:opacity-90 active:scale-[0.98] disabled:opacity-30 disabled:hover:opacity-30"
+                className="mt-3 flex w-full items-center justify-center gap-2 rounded-full bg-ink py-3.5 text-[15px] font-medium text-ink-contrast transition-all duration-200 ease-[var(--ease-out)] hover:opacity-90 active:scale-[0.98] disabled:opacity-30 disabled:hover:opacity-30"
               >
                 {sending ? (
                   <>
@@ -127,7 +127,7 @@ export function AuthPanel() {
             </div>
 
             {error && (
-              <p className="animate-fade-in mt-4 text-[13px] leading-relaxed text-secondary">{error}</p>
+              <p className="animate-fade-in mt-4 text-[14px] leading-relaxed text-secondary">{error}</p>
             )}
           </>
         )}

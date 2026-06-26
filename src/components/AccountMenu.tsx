@@ -42,7 +42,7 @@ export function AccountMenu() {
       {configured && status === 'signed_out' && (
         <button
           onClick={openAuth}
-          className="rounded-full border border-hairline px-3.5 py-1.5 text-[13px] text-secondary transition-colors duration-200 hover:bg-fill hover:text-content"
+          className="rounded-full border border-hairline px-3.5 py-1.5 text-[14px] text-secondary transition-colors duration-200 hover:bg-fill hover:text-content"
         >
           Sign in
         </button>
@@ -54,7 +54,7 @@ export function AccountMenu() {
             onClick={() => setMenuOpen((v) => !v)}
             aria-label="Account"
             aria-expanded={menuOpen}
-            className="grid h-9 w-9 place-items-center rounded-full bg-ink text-[13px] font-medium uppercase text-ink-contrast transition-transform duration-200 hover:scale-105 active:scale-95"
+            className="grid h-9 w-9 place-items-center rounded-full bg-ink text-[14px] font-medium uppercase text-ink-contrast transition-transform duration-200 hover:scale-105 active:scale-95"
           >
             {initial(user.email)}
           </button>
@@ -69,8 +69,8 @@ export function AccountMenu() {
                     <User className="h-4 w-4" strokeWidth={1.5} />
                   </span>
                   <div className="min-w-0">
-                    <p className="text-[11px] uppercase tracking-[0.1em] text-tertiary">Signed in</p>
-                    <p className="truncate text-[13px] text-content">{user.email}</p>
+                    <p className="text-[12px] uppercase tracking-[0.1em] text-tertiary">Signed in</p>
+                    <p className="truncate text-[14px] text-content">{user.email}</p>
                   </div>
                 </div>
                 <div className="my-1 h-px bg-hairline" />
@@ -79,7 +79,7 @@ export function AccountMenu() {
                     setMenuOpen(false)
                     void signOut()
                   }}
-                  className="flex w-full items-center gap-3 rounded-[var(--radius-lg)] px-3 py-2.5 text-left text-[13px] text-secondary transition-colors duration-200 hover:bg-fill hover:text-content"
+                  className="flex w-full items-center gap-3 rounded-[var(--radius-lg)] px-3 py-2.5 text-left text-[14px] text-secondary transition-colors duration-200 hover:bg-fill hover:text-content"
                 >
                   <LogOut className="h-4 w-4" strokeWidth={1.5} />
                   Sign out

@@ -21,12 +21,12 @@ export function Mixer() {
 
   return (
     <section className="w-full">
-      <h2 className="mb-4 text-[13px] font-medium uppercase tracking-[0.14em] text-tertiary">
+      <h2 className="mb-4 text-[14px] font-medium uppercase tracking-[0.14em] text-tertiary">
         Mix
       </h2>
 
       {active.length === 0 ? (
-        <p className="text-[13px] leading-relaxed text-tertiary">
+        <p className="text-[14px] leading-relaxed text-tertiary">
           Nothing playing yet. Pick a sound above to start your mix.
         </p>
       ) : (
@@ -36,7 +36,7 @@ export function Mixer() {
               key={sound.id}
               className="group flex items-center gap-4 rounded-[var(--radius-lg)] px-3 py-3 transition-colors duration-200 hover:bg-fill"
             >
-              <span className="w-28 shrink-0 truncate text-[14px] text-content">{sound.name}</span>
+              <span className="w-28 shrink-0 truncate text-[15px] text-content">{sound.name}</span>
               <div className="flex-1">
                 <Slider
                   value={mix[sound.id]}
@@ -44,7 +44,7 @@ export function Mixer() {
                   ariaLabel={`${sound.name} volume`}
                 />
               </div>
-              <span className="w-8 shrink-0 text-right text-[12px] tabular-nums text-tertiary">
+              <span className="w-8 shrink-0 text-right text-[13px] tabular-nums text-tertiary">
                 {Math.round(mix[sound.id] * 100)}
               </span>
               <button

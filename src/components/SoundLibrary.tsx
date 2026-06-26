@@ -22,7 +22,7 @@ export function SoundLibrary() {
 
   return (
     <section className="w-full">
-      <h2 className="mb-4 text-[13px] font-medium uppercase tracking-[0.14em] text-tertiary">
+      <h2 className="mb-4 text-[14px] font-medium uppercase tracking-[0.14em] text-tertiary">
         Sounds
       </h2>
 
@@ -36,9 +36,9 @@ export function SoundLibrary() {
             return (
               <div key={cat}>
                 <CategoryLabel>{cat}</CategoryLabel>
-                <p className="text-[13px] leading-relaxed text-tertiary">
+                <p className="text-[14px] leading-relaxed text-tertiary">
                   No {cat.toLowerCase()} sources yet. Add a royalty-free stream in{' '}
-                  <code className="rounded bg-fill px-1.5 py-0.5 text-[12px]">
+                  <code className="rounded bg-fill px-1.5 py-0.5 text-[13px]">
                     src/config/sources.ts
                   </code>
                   , or add your own audio below.
@@ -75,7 +75,7 @@ export function SoundLibrary() {
                 {isYours && (
                   <button
                     onClick={() => fileInput.current?.click()}
-                    className="flex items-center gap-2 rounded-full border border-dashed border-hairline-strong px-4 py-2.5 text-[13px] text-secondary transition-colors duration-200 hover:bg-fill hover:text-content"
+                    className="flex items-center gap-2 rounded-full border border-dashed border-hairline-strong px-4 py-2.5 text-[14px] text-secondary transition-colors duration-200 hover:bg-fill hover:text-content"
                   >
                     <Upload className="h-4 w-4" strokeWidth={1.5} />
                     Add your audio
@@ -105,7 +105,7 @@ export function SoundLibrary() {
 
 function CategoryLabel({ children }: { children: ReactNode }) {
   return (
-    <h3 className="mb-3 text-[12px] font-medium uppercase tracking-[0.14em] text-tertiary">
+    <h3 className="mb-3 text-[13px] font-medium uppercase tracking-[0.14em] text-tertiary">
       {children}
     </h3>
   )
@@ -124,7 +124,7 @@ function Tile({
     <button
       onClick={onToggle}
       aria-pressed={active}
-      className={`group flex items-center gap-2 rounded-full px-4 py-2.5 text-[13px] transition-all duration-200 ease-[var(--ease-out)] active:scale-95 ${
+      className={`group flex items-center gap-2 rounded-full px-4 py-2.5 text-[14px] transition-all duration-200 ease-[var(--ease-out)] active:scale-95 ${
         active
           ? 'bg-ink text-ink-contrast shadow-[var(--shadow)]'
           : 'border border-hairline text-secondary hover:bg-fill hover:text-content'
@@ -161,7 +161,7 @@ function DeletableTile({
 }) {
   return (
     <div
-      className={`flex items-center rounded-full text-[13px] transition-all duration-200 ease-[var(--ease-out)] ${
+      className={`flex items-center rounded-full text-[14px] transition-all duration-200 ease-[var(--ease-out)] ${
         active
           ? 'bg-ink text-ink-contrast shadow-[var(--shadow)]'
           : 'border border-hairline text-secondary'
