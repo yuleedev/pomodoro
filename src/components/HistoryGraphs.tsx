@@ -10,7 +10,9 @@
  * Pure CSS/SVG-free; only focus sessions count toward the totals.
  */
 import { useMemo } from 'react'
+import { motion } from 'framer-motion'
 import { dayKey, formatDuration } from '../lib/time'
+import { softSpring, spring } from '../lib/motion'
 import type { SessionRecord } from '../lib/history'
 
 const WEEKS = 18
@@ -102,9 +104,12 @@ export function HistoryGraphs({ sessions }: { sessions: SessionRecord[] }) {
           <div className="flex gap-[3px]">
             {columns.map((col, w) => (
               <div key={w} className="flex flex-col gap-[3px]">
-                {col.map((cell) => (
-                  <div
+                {col.map((cell, d) => (
+                  <motion.div
                     key={cell.key}
+                    initial={{ scale: 0, opacity: 0 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                    transition={{ ...spring, delay: (w * 7 + d) * 0.004 }}
                     title={
                       cell.future
                         ? undefined
@@ -141,11 +146,14 @@ export function HistoryGraphs({ sessions }: { sessions: SessionRecord[] }) {
           Last 14 days
         </h2>
         <div className="flex h-24 items-end gap-1.5">
-          {bars.map((b) => (
+          {bars.map((b, i) => (
             <div key={b.key} className="flex flex-1 flex-col items-center gap-1.5">
-              <div
+              <motion.div
+                initial={{ scaleY: 0 }}
+                animate={{ scaleY: 1 }}
+                transition={{ ...softSpring, delay: i * 0.03 }}
                 title={`${b.key} · ${b.minutes ? formatDuration(b.minutes) : 'no focus'}`}
-                className="w-full rounded-[3px] transition-all"
+                className="w-full origin-bottom rounded-[3px]"
                 style={{
                   height: `${b.minutes > 0 ? Math.max(4, (b.minutes / barMax) * 80) : 2}px`,
                   backgroundColor:

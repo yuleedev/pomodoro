@@ -6,31 +6,44 @@
  * "breathes" while the timer runs — the signature animated element. Controls
  * sit below; when idle, compact duration steppers appear. Strictly monochrome.
  */
+import { useState } from 'react'
 import { Maximize2, Minus, Pause, Play, Plus, RotateCcw } from 'lucide-react'
 import { useStore } from '../state/store'
 import { formatClock } from '../lib/time'
-
-const R = 46
-const C = 2 * Math.PI * R
+import { TimerRing } from './TimerRing'
 
 export function TimerHero() {
   const timer = useStore((s) => s.timer)
+  const mode = useStore((s) => s.timerMode)
   const phase = useStore((s) => s.phase)
   const remainingSec = useStore((s) => s.remainingSec)
+  const elapsedSec = useStore((s) => s.elapsedSec)
   const running = useStore((s) => s.timerRunning)
   const completed = useStore((s) => s.completedSessions)
+  const timerStyle = useStore((s) => s.timerStyle)
   const startTimer = useStore((s) => s.startTimer)
   const pauseTimer = useStore((s) => s.pauseTimer)
   const resetTimer = useStore((s) => s.resetTimer)
   const enterFocus = useStore((s) => s.enterFocus)
   const setTimerConfig = useStore((s) => s.setTimerConfig)
+  const setTimerMode = useStore((s) => s.setTimerMode)
   const activeTask = useStore((s) => s.tasks.find((t) => t.id === s.selectedTaskId))
 
   const idle = phase === 'idle'
+  const stopwatch = mode === 'stopwatch'
   const totalSec = (phase === 'break' ? timer.breakMinutes : timer.workMinutes) * 60
-  const shownSec = idle ? timer.workMinutes * 60 : remainingSec
-  const fraction = idle ? 1 : Math.max(0, Math.min(1, remainingSec / totalSec))
-  const phaseLabel = idle ? 'Ready' : phase === 'work' ? 'Focus' : 'Break'
+  const shownSec = stopwatch ? elapsedSec : idle ? timer.workMinutes * 60 : remainingSec
+  // Stopwatch has no fixed end, so the ring stays full (it just breathes).
+  const fraction = stopwatch ? 1 : idle ? 1 : Math.max(0, Math.min(1, remainingSec / totalSec))
+  const phaseLabel = stopwatch
+    ? idle
+      ? 'Stopwatch'
+      : 'Focus'
+    : idle
+      ? 'Ready'
+      : phase === 'work'
+        ? 'Focus'
+        : 'Break'
 
   return (
     <section className="flex flex-col items-center pt-2">
@@ -38,35 +51,7 @@ export function TimerHero() {
 
       {/* Ring + numerals */}
       <div className="relative aspect-square w-full max-w-[320px]">
-        {/* Breathing glow — only while running. */}
-        {running && (
-          <div
-            className="pointer-events-none absolute inset-[12%] rounded-full"
-            style={{
-              background:
-                'radial-gradient(circle, color-mix(in srgb, var(--ink) 14%, transparent) 0%, transparent 70%)',
-              animation: 'breathe 4.5s ease-in-out infinite',
-            }}
-          />
-        )}
-
-        <svg viewBox="0 0 100 100" className="h-full w-full -rotate-90">
-          {/* Track */}
-          <circle cx="50" cy="50" r={R} fill="none" stroke="var(--fill-strong)" strokeWidth="2" />
-          {/* Progress */}
-          <circle
-            cx="50"
-            cy="50"
-            r={R}
-            fill="none"
-            stroke="var(--ink)"
-            strokeWidth="2.5"
-            strokeLinecap="round"
-            strokeDasharray={C}
-            strokeDashoffset={C * (1 - fraction)}
-            style={{ transition: 'stroke-dashoffset 0.6s linear' }}
-          />
-        </svg>
+        <TimerRing fraction={fraction} style={timerStyle} running={running} />
 
         {/* Center content */}
         <div className="absolute inset-0 flex flex-col items-center justify-center px-8 text-center">
@@ -83,14 +68,13 @@ export function TimerHero() {
       </div>
 
       {/* Session dots */}
-      {timer.sessions > 1 && (
+      {!stopwatch && timer.sessions > 1 && (
         <div className="mt-6 flex items-center gap-2">
           {Array.from({ length: timer.sessions }).map((_, i) => (
             <span
               key={i}
-              className={`h-1.5 w-1.5 rounded-full transition-colors duration-300 ${
-                i < completed ? 'bg-content' : 'bg-fill-strong'
-              }`}
+              className="h-1.5 w-1.5 rounded-full transition-colors duration-300"
+              style={{ backgroundColor: i < completed ? 'var(--accent)' : 'var(--fill-strong)' }}
             />
           ))}
         </div>
@@ -119,9 +103,29 @@ export function TimerHero() {
         </GhostBtn>
       </div>
 
-      {/* Duration steppers (only when idle) */}
+      {/* Mode toggle: Pomodoro countdown vs. count-up stopwatch (idle only) */}
       {idle && (
-        <div className="mt-9 grid w-full max-w-sm grid-cols-3 gap-3">
+        <div className="mt-8 inline-flex rounded-full border border-hairline p-0.5">
+          {(['pomodoro', 'stopwatch'] as const).map((m) => (
+            <button
+              key={m}
+              onClick={() => setTimerMode(m)}
+              aria-pressed={mode === m}
+              className={`rounded-full px-4 py-1.5 text-[12px] capitalize tracking-wide transition-colors duration-200 ${
+                mode === m
+                  ? 'bg-ink text-ink-contrast'
+                  : 'text-secondary hover:text-content'
+              }`}
+            >
+              {m}
+            </button>
+          ))}
+        </div>
+      )}
+
+      {/* Duration steppers (Pomodoro, idle only) */}
+      {idle && !stopwatch && (
+        <div className="mt-7 grid w-full max-w-sm grid-cols-3 gap-3">
           <Stepper
             label="Focus"
             unit="min"
@@ -192,6 +196,16 @@ function Stepper({
   step: number
   onChange: (v: number) => void
 }) {
+  // While editing, hold the raw text so partial input ("1", "") isn't clamped
+  // mid-keystroke. On blur/Enter we parse, clamp to [min, max], and commit.
+  const [draft, setDraft] = useState<string | null>(null)
+
+  const commit = (raw: string) => {
+    const n = Math.round(Number(raw))
+    if (raw.trim() !== '' && Number.isFinite(n)) onChange(Math.max(min, Math.min(max, n)))
+    setDraft(null)
+  }
+
   return (
     <div className="flex flex-col items-center gap-2">
       <span className="text-[11px] uppercase tracking-[0.1em] text-tertiary">{label}</span>
@@ -204,8 +218,20 @@ function Stepper({
         >
           <Minus className="h-3.5 w-3.5" strokeWidth={2} />
         </button>
-        <span className="w-11 text-center text-[20px] font-medium tabular-nums text-content">
-          {value}
+        <span className="flex w-11 items-baseline justify-center text-[20px] font-medium tabular-nums text-content">
+          <input
+            type="text"
+            inputMode="numeric"
+            aria-label={`${label} (${unit})`}
+            value={draft ?? String(value)}
+            onChange={(e) => setDraft(e.target.value.replace(/[^0-9]/g, ''))}
+            onFocus={(e) => e.target.select()}
+            onBlur={(e) => commit(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') e.currentTarget.blur()
+            }}
+            className="w-7 bg-transparent text-right tabular-nums text-content outline-none focus:text-accent"
+          />
           <span className="ml-0.5 text-[11px] text-tertiary">{unit}</span>
         </span>
         <button

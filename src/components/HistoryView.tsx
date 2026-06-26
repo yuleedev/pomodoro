@@ -7,6 +7,7 @@
  * elegant empty state.
  */
 import { useCallback, useEffect, useMemo, useState } from 'react'
+import { motion } from 'framer-motion'
 import { Loader2, Trash2, X } from 'lucide-react'
 import {
   clearAllSessions,
@@ -14,6 +15,8 @@ import {
   listSessions,
   type SessionRecord,
 } from '../lib/history'
+import { seedDemoSessions } from '../lib/seed'
+import { overlaySpring, spring } from '../lib/motion'
 import { HistoryGraphs } from './HistoryGraphs'
 import { useAuth } from '../state/auth'
 import { useUI } from '../state/ui'
@@ -74,19 +77,42 @@ export function HistoryView() {
   const groups = useMemo(() => groupByDay(sessions ?? []), [sessions])
   const hasAny = (sessions?.length ?? 0) > 0
 
+  // DEV-ONLY: fill the graphs with believable history so they can be previewed
+  // without running real 25-minute sessions. Remove with src/lib/seed.ts.
+  const onSeedDemo = () => {
+    setError(null)
+    setSessions(seedDemoSessions())
+  }
+
   return (
     <div className="fixed inset-0 z-50 overflow-y-auto bg-bg animate-fade-in">
-      <div className="mx-auto w-full max-w-xl px-5 pb-24">
+      <motion.div
+        initial={{ opacity: 0, y: 14 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={overlaySpring}
+        className="mx-auto w-full max-w-xl px-5 pb-24"
+      >
         {/* Header */}
         <header className="sticky top-0 z-10 -mx-5 flex items-center justify-between bg-bg/80 px-5 py-6 backdrop-blur">
           <h1 className="text-[24px] font-medium tracking-tight text-content">History</h1>
-          <button
-            onClick={close}
-            aria-label="Close history"
-            className="grid h-9 w-9 place-items-center rounded-full text-tertiary transition-colors duration-200 hover:bg-fill hover:text-content"
-          >
-            <X className="h-5 w-5" strokeWidth={1.5} />
-          </button>
+          <div className="flex items-center gap-2">
+            {/* DEV-ONLY preview helper — remove with src/lib/seed.ts */}
+            {import.meta.env.DEV && (
+              <button
+                onClick={onSeedDemo}
+                className="rounded-full border border-hairline px-3 py-1.5 text-[12px] text-tertiary transition-colors duration-200 hover:bg-fill hover:text-content"
+              >
+                Load demo data
+              </button>
+            )}
+            <button
+              onClick={close}
+              aria-label="Close history"
+              className="grid h-9 w-9 place-items-center rounded-full text-tertiary transition-colors duration-200 hover:bg-fill hover:text-content"
+            >
+              <X className="h-5 w-5" strokeWidth={1.5} />
+            </button>
+          </div>
         </header>
 
         {/* Loading */}
@@ -98,9 +124,9 @@ export function HistoryView() {
           <>
             {/* Stats */}
             <div className="mb-10 grid grid-cols-3 gap-4">
-              <Stat value={formatDuration(stats.weekFocusMinutes)} label="This week" />
-              <Stat value={String(stats.todaySessions)} label="Today" />
-              <Stat value={String(stats.totalSessions)} label="All time" />
+              <Stat value={formatDuration(stats.weekFocusMinutes)} label="This week" index={0} />
+              <Stat value={String(stats.todaySessions)} label="Today" index={1} />
+              <Stat value={String(stats.totalSessions)} label="All time" index={2} />
             </div>
 
             {/* Sign-in nudge for local-only history. */}
@@ -170,19 +196,24 @@ export function HistoryView() {
             )}
           </>
         )}
-      </div>
+      </motion.div>
     </div>
   )
 }
 
-function Stat({ value, label }: { value: string; label: string }) {
+function Stat({ value, label, index = 0 }: { value: string; label: string; index?: number }) {
   return (
-    <div className="flex flex-col">
+    <motion.div
+      className="flex flex-col"
+      initial={{ opacity: 0, y: 10, scale: 0.96 }}
+      animate={{ opacity: 1, y: 0, scale: 1 }}
+      transition={{ ...spring, delay: 0.05 + index * 0.06 }}
+    >
       <span className="text-[30px] font-light leading-none tracking-tight tabular-nums text-content">
         {value}
       </span>
       <span className="mt-2 text-[12px] uppercase tracking-[0.1em] text-tertiary">{label}</span>
-    </div>
+    </motion.div>
   )
 }
 

@@ -10,7 +10,9 @@ import { formatClock } from '../lib/time'
 
 export function FocusMode() {
   const phase = useStore((s) => s.phase)
+  const mode = useStore((s) => s.timerMode)
   const remainingSec = useStore((s) => s.remainingSec)
+  const elapsedSec = useStore((s) => s.elapsedSec)
   const running = useStore((s) => s.timerRunning)
   const timer = useStore((s) => s.timer)
   const completed = useStore((s) => s.completedSessions)
@@ -22,13 +24,18 @@ export function FocusMode() {
   const activeTask = useStore((s) => s.tasks.find((t) => t.id === s.selectedTaskId))
 
   const isIdle = phase === 'idle'
-  const label = isIdle
-    ? completed >= timer.sessions && timer.sessions > 0
-      ? 'Done'
-      : 'Ready'
-    : phase === 'work'
-      ? 'Focus'
-      : 'Break'
+  const stopwatch = mode === 'stopwatch'
+  const label = stopwatch
+    ? isIdle
+      ? 'Stopwatch'
+      : 'Focus'
+    : isIdle
+      ? completed >= timer.sessions && timer.sessions > 0
+        ? 'Done'
+        : 'Ready'
+      : phase === 'work'
+        ? 'Focus'
+        : 'Break'
 
   return (
     <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-bg animate-fade-in">
@@ -46,7 +53,9 @@ export function FocusMode() {
 
       {/* The clock — the single focal point */}
       <div className="select-none text-[18vw] font-light leading-none tracking-tight tabular-nums text-content sm:text-[130px]">
-        {isIdle ? formatClock(timer.workMinutes * 60) : formatClock(remainingSec)}
+        {stopwatch
+          ? formatClock(isIdle ? 0 : elapsedSec)
+          : formatClock(isIdle ? timer.workMinutes * 60 : remainingSec)}
       </div>
 
       {/* Active task */}
@@ -57,7 +66,7 @@ export function FocusMode() {
       )}
 
       {/* Session progress dots */}
-      {timer.sessions > 1 && (
+      {!stopwatch && timer.sessions > 1 && (
         <div className="mt-10 flex items-center gap-2.5">
           {Array.from({ length: timer.sessions }).map((_, i) => (
             <span

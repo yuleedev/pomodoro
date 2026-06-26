@@ -7,6 +7,7 @@
 import { useEffect } from 'react'
 import { AuthPanel } from './components/AuthPanel'
 import { ControlBar } from './components/ControlBar'
+import { CustomizePanel } from './components/CustomizePanel'
 import { FocusMode } from './components/FocusMode'
 import { Header } from './components/Header'
 import { HistoryView } from './components/HistoryView'
@@ -25,6 +26,7 @@ export function App() {
   const loadTasks = useStore((s) => s.loadTasks)
   const authOpen = useUI((s) => s.authOpen)
   const historyOpen = useUI((s) => s.historyOpen)
+  const customizeOpen = useUI((s) => s.customizeOpen)
   const initAuth = useAuth((s) => s.init)
   const userId = useAuth((s) => s.user?.id)
   const authStatus = useAuth((s) => s.status)
@@ -64,6 +66,7 @@ export function App() {
       {focusMode && <FocusMode />}
       {historyOpen && <HistoryView />}
       {authOpen && <AuthPanel />}
+      {customizeOpen && <CustomizePanel />}
     </div>
   )
 }

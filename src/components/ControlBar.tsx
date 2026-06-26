@@ -3,8 +3,10 @@
  * play/pause (handy when scrolled away from the hero), the master volume, and
  * an entry into focus mode. Translucent material, monochrome, restrained.
  */
+import { motion } from 'framer-motion'
 import { Maximize2, Pause, Play, Volume1, Volume2, VolumeX } from 'lucide-react'
 import { useStore } from '../state/store'
+import { spring } from '../lib/motion'
 import { Slider } from './Slider'
 
 export function ControlBar() {
@@ -21,18 +23,21 @@ export function ControlBar() {
     <div className="pointer-events-none fixed inset-x-0 bottom-0 z-30 flex justify-center px-4 pb-[calc(1rem+env(safe-area-inset-bottom))]">
       <div className="glass pointer-events-auto flex w-full max-w-md items-center gap-3 rounded-full px-3 py-2.5 shadow-[var(--shadow)]">
         {/* Compact play / pause */}
-        <button
+        <motion.button
           onClick={togglePlay}
           disabled={!hasMix}
           aria-label={isPlaying ? 'Pause' : 'Play'}
-          className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-ink text-ink-contrast transition-all duration-200 hover:scale-105 active:scale-95 disabled:opacity-25 disabled:hover:scale-100"
+          whileHover={hasMix ? { scale: 1.08 } : undefined}
+          whileTap={hasMix ? { scale: 0.88 } : undefined}
+          transition={spring}
+          className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-ink text-ink-contrast transition-colors duration-200 disabled:opacity-25"
         >
           {isPlaying ? (
             <Pause className="h-4 w-4" strokeWidth={1.5} fill="currentColor" />
           ) : (
             <Play className="h-4 w-4 translate-x-[1px]" strokeWidth={1.5} fill="currentColor" />
           )}
-        </button>
+        </motion.button>
 
         {/* Master volume */}
         <VolIcon className="h-4 w-4 shrink-0 text-tertiary" strokeWidth={1.5} />
@@ -41,13 +46,16 @@ export function ControlBar() {
         </div>
 
         {/* Enter focus */}
-        <button
+        <motion.button
           onClick={enterFocus}
           aria-label="Enter focus mode"
+          whileHover={{ scale: 1.08 }}
+          whileTap={{ scale: 0.88 }}
+          transition={spring}
           className="grid h-10 w-10 shrink-0 place-items-center rounded-full text-secondary transition-colors duration-200 hover:bg-fill hover:text-content"
         >
           <Maximize2 className="h-4 w-4" strokeWidth={1.5} />
-        </button>
+        </motion.button>
       </div>
     </div>
   )

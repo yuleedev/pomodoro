@@ -1,13 +1,17 @@
 # Cadence
 
 A focus-first study app. A Pomodoro timer at its heart, an integrated to-do
-list, and ambient soundscapes underneath — calm, precise, and strictly
-monochrome (black/white/gray only, no color accents ever).
+list, and ambient soundscapes underneath — calm, precise, and monochrome by
+default, with an optional accent color you can set (or build your own palette).
 
-- **Pomodoro timer (the centerpiece)** — a large, centered hero timer with a
-  grayscale circular progress ring, big tight-tracked numerals, smooth
+- **Pomodoro timer (the centerpiece)** — a large, centered hero timer whose
+  border shows time remaining, big tight-tracked numerals, smooth
   start/pause/reset, and a distraction-free fullscreen focus mode. A faint ring
-  "breathes" while it runs — the one signature animated element.
+  "breathes" while it runs — the signature animated element. Choose from four
+  progress styles: **Ring, Squiggle, Segments, Dot**.
+- **Customizable look** — a Customize menu (slider icon, top right) to switch
+  theme (dark/light), pick the timer style, and set an accent color from presets
+  or **your own palette** (native color picker). Defaults to monochrome.
 - **Tasks, integrated with the timer** — add, inline-edit, complete, delete, and
   **drag to reorder**. Select a task to make it *active*: the timer runs against
   it, its name shows under the clock, and every completed focus interval adds a
@@ -145,6 +149,24 @@ license-free. Toggle any of them under **Sounds** and balance them in the
 **Mix**. To add or tweak generators, edit `src/audio/catalog.ts` (and, for new
 synthesis, `public/noise-processor.js` / `src/audio/engine.ts`).
 
+## Customize
+
+Open the Customize menu from the **slider icon** (top right):
+
+- **Theme** — Dark or Light (black/white). `T` still toggles it.
+- **Timer style** — the progress indicator that shows time remaining, in four
+  styles: **Ring**, **Squiggle**, **Segments**, **Dot**. Each previews live.
+- **Accent** — the app is monochrome by default. Pick a preset, or tap **+** to
+  choose **your own color** with the native picker; your colors are saved into a
+  personal palette (remove any with its ✕). The accent flows through the timer
+  ring, breathing glow, session dots, and the active-task indicator. Choosing
+  **Monochrome** restores the original black-and-white look.
+
+All choices persist locally (and the accent is applied before first paint on
+reload). Implementation: a single `--accent` CSS variable (defaulting to the ink
+tone) set on `<html>`; see `src/components/CustomizePanel.tsx`,
+`src/components/TimerRing.tsx`, and the appearance slice of `src/state/store.ts`.
+
 ## Keyboard shortcuts
 
 | Key     | Action              |
@@ -190,7 +212,9 @@ src/
     ui.ts                   Auth/history overlay open-state
   hooks/useKeyboard.ts      Keyboard shortcuts
   components/
-    TimerHero.tsx           The centerpiece Pomodoro timer + progress ring
+    TimerHero.tsx           The centerpiece Pomodoro timer
+    TimerRing.tsx           The progress indicator styles (ring/squiggle/…)
+    CustomizePanel.tsx      Theme · timer style · accent palette
     TaskList.tsx            Drag-reorderable to-do list, wired to the timer
     FocusMode.tsx           Fullscreen distraction-free timer
     ...                     ControlBar, SoundLibrary, Mixer, History*, auth, header

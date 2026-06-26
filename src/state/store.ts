@@ -22,6 +22,10 @@ import {
 
 export type Theme = 'dark' | 'light'
 export type TimerPhase = 'idle' | 'work' | 'break'
+/** Countdown Pomodoro, or a free-running count-up stopwatch. */
+export type TimerMode = 'pomodoro' | 'stopwatch'
+/** Visual style of the hero timer's progress indicator. */
+export type TimerStyle = 'ring' | 'squiggle' | 'segments' | 'dot'
 
 export interface TimerConfig {
   workMinutes: number
@@ -37,14 +41,25 @@ interface State {
   isPlaying: boolean
 
   timer: TimerConfig
+  /** Which clock the hero shows: countdown Pomodoro or count-up stopwatch. */
+  timerMode: TimerMode
   phase: TimerPhase
   remainingSec: number
+  /** Seconds elapsed in stopwatch mode (counts up; unused in Pomodoro). */
+  elapsedSec: number
   completedSessions: number
   timerRunning: boolean
   /** Epoch ms when the current phase began — used as a session's started_at. */
   phaseStartedAt: number | null
 
   focusMode: boolean
+
+  // ── appearance / customization ───────────────────────────────────────────
+  timerStyle: TimerStyle
+  /** Accent color (any CSS color), or null for monochrome (default). */
+  accent: string | null
+  /** Colors the user has saved into their own palette. */
+  customSwatches: string[]
 
   /** To-do list, ordered by position. */
   tasks: Task[]
@@ -53,12 +68,18 @@ interface State {
 
   // ── actions ──────────────────────────────────────────────────────────────
   toggleTheme: () => void
+  setTheme: (theme: Theme) => void
+  setTimerStyle: (s: TimerStyle) => void
+  setAccent: (color: string | null) => void
+  addSwatch: (color: string) => void
+  removeSwatch: (color: string) => void
   setMasterVolume: (v: number) => void
   toggleSound: (id: string) => void
   setVolume: (id: string, v: number) => void
   togglePlay: () => void
 
   setTimerConfig: (c: Partial<TimerConfig>) => void
+  setTimerMode: (mode: TimerMode) => void
   startTimer: () => void
   pauseTimer: () => void
   resetTimer: () => void
@@ -85,6 +106,16 @@ function findSound(id: string): Sound | undefined {
 // Module-level interval handle for the timer tick (kept out of React state).
 let tickHandle: number | null = null
 
+/**
+ * Set (or clear) the global --accent CSS variable. When null, the variable is
+ * removed so it falls back to the stylesheet default (the monochrome ink tone).
+ */
+function applyAccent(color: string | null) {
+  const root = document.documentElement
+  if (color) root.style.setProperty('--accent', color)
+  else root.style.removeProperty('--accent')
+}
+
 export const useStore = create<State>()(
   persist(
     (set, get) => ({
@@ -94,19 +125,26 @@ export const useStore = create<State>()(
       isPlaying: false,
 
       timer: { workMinutes: 25, breakMinutes: 5, sessions: 4 },
+      timerMode: 'pomodoro',
       phase: 'idle',
       remainingSec: 0,
+      elapsedSec: 0,
       completedSessions: 0,
       timerRunning: false,
       phaseStartedAt: null,
 
       focusMode: false,
 
+      timerStyle: 'ring',
+      accent: null,
+      customSwatches: [],
+
       tasks: [],
       selectedTaskId: null,
 
-      toggleTheme: () => {
-        const theme = get().theme === 'dark' ? 'light' : 'dark'
+      toggleTheme: () => get().setTheme(get().theme === 'dark' ? 'light' : 'dark'),
+
+      setTheme: (theme) => {
         document.documentElement.classList.toggle('dark', theme === 'dark')
         // Mirror to a dedicated key so the pre-paint script (index.html) can
         // apply the right theme before React loads — no flash.
@@ -116,6 +154,26 @@ export const useStore = create<State>()(
           /* ignore */
         }
         set({ theme })
+      },
+
+      setTimerStyle: (s) => set({ timerStyle: s }),
+
+      setAccent: (color) => {
+        applyAccent(color)
+        set({ accent: color })
+      },
+
+      addSwatch: (color) => {
+        const c = color.toLowerCase()
+        const swatches = get().customSwatches
+        if (!swatches.includes(c)) set({ customSwatches: [...swatches, c] })
+        get().setAccent(c) // selecting the new color immediately
+      },
+
+      removeSwatch: (color) => {
+        const c = color.toLowerCase()
+        set({ customSwatches: get().customSwatches.filter((s) => s !== c) })
+        if (get().accent === c) get().setAccent(null)
       },
 
       setMasterVolume: (v) => {
@@ -172,12 +230,27 @@ export const useStore = create<State>()(
         }
       },
 
+      setTimerMode: (mode) => {
+        // Switching the clock type always returns to a clean idle state.
+        stopTicking()
+        set({
+          timerMode: mode,
+          timerRunning: false,
+          phase: 'idle',
+          remainingSec: mode === 'pomodoro' ? get().timer.workMinutes * 60 : 0,
+          elapsedSec: 0,
+          completedSessions: 0,
+          phaseStartedAt: null,
+        })
+      },
+
       startTimer: () => {
-        const { phase, timer, isPlaying, togglePlay } = get()
+        const { phase, timer, timerMode, isPlaying, togglePlay } = get()
         if (phase === 'idle') {
           set({
             phase: 'work',
-            remainingSec: timer.workMinutes * 60,
+            remainingSec: timerMode === 'stopwatch' ? 0 : timer.workMinutes * 60,
+            elapsedSec: 0,
             completedSessions: 0,
             phaseStartedAt: Date.now(),
           })
@@ -193,11 +266,18 @@ export const useStore = create<State>()(
       },
 
       resetTimer: () => {
+        // A stopwatch run that's accumulated real time counts as a focus session.
+        const { timerMode, phase, elapsedSec, phaseStartedAt } = get()
+        if (timerMode === 'stopwatch' && phase !== 'idle' && elapsedSec >= 60) {
+          logCompleted('focus', Math.round(elapsedSec / 60), phaseStartedAt, get)
+          get().bumpActiveTaskSession()
+        }
         stopTicking()
         set({
           timerRunning: false,
           phase: 'idle',
           remainingSec: 0,
+          elapsedSec: 0,
           completedSessions: 0,
           phaseStartedAt: null,
         })
@@ -285,11 +365,15 @@ export const useStore = create<State>()(
         masterVolume: s.masterVolume,
         mix: s.mix,
         timer: s.timer,
+        timerMode: s.timerMode,
         selectedTaskId: s.selectedTaskId,
+        timerStyle: s.timerStyle,
+        accent: s.accent,
+        customSwatches: s.customSwatches,
       }),
       onRehydrateStorage: () => (state) => {
-        // Keep the <html> class in sync with the persisted theme, and never
-        // resume audio automatically — wait for a user gesture.
+        // Keep the <html> class in sync with the persisted theme, apply the
+        // saved accent, and never resume audio automatically (autoplay rules).
         if (state) {
           document.documentElement.classList.toggle('dark', state.theme === 'dark')
           try {
@@ -297,8 +381,11 @@ export const useStore = create<State>()(
           } catch {
             /* ignore */
           }
+          applyAccent(state.accent ?? null)
           state.isPlaying = false
-          state.remainingSec = state.timer.workMinutes * 60
+          state.elapsedSec = 0
+          state.remainingSec =
+            state.timerMode === 'stopwatch' ? 0 : state.timer.workMinutes * 60
         }
       },
     },
@@ -309,7 +396,12 @@ export const useStore = create<State>()(
 function startTicking(set: SetFn, get: GetFn) {
   stopTicking()
   tickHandle = window.setInterval(() => {
-    const { remainingSec, phase, timer, completedSessions } = get()
+    const { remainingSec, phase, timer, completedSessions, timerMode } = get()
+    // Stopwatch simply accumulates — no phases, no boundary.
+    if (timerMode === 'stopwatch') {
+      set({ elapsedSec: get().elapsedSec + 1 })
+      return
+    }
     if (remainingSec > 1) {
       set({ remainingSec: remainingSec - 1 })
       return

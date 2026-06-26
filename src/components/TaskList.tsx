@@ -105,7 +105,10 @@ function TaskRow({ task }: { task: Task }) {
     >
       {/* Active accent bar */}
       {active && (
-        <span className="absolute left-0 top-1/2 h-5 w-[3px] -translate-y-1/2 rounded-full bg-ink" />
+        <span
+          className="absolute left-0 top-1/2 h-5 w-[3px] -translate-y-1/2 rounded-full"
+          style={{ backgroundColor: 'var(--accent)' }}
+        />
       )}
 
       {/* Drag handle */}
@@ -197,7 +200,11 @@ function SessionDots({ count }: { count: number }) {
   return (
     <span className="flex shrink-0 items-center gap-1" title={`${count} session${count > 1 ? 's' : ''}`}>
       {Array.from({ length: count }).map((_, i) => (
-        <span key={i} className="h-1.5 w-1.5 rounded-full bg-secondary" />
+        <span
+          key={i}
+          className="h-1.5 w-1.5 rounded-full"
+          style={{ backgroundColor: 'var(--accent)' }}
+        />
       ))}
     </span>
   )
