@@ -1,5 +1,5 @@
 /*
- * The sound library — fully procedural, generated in real time with the Web
+ * The sound library - fully procedural, generated in real time with the Web
  * Audio API. No files, no external streams, no uploads: everything here works
  * offline and is license-free.
  */
@@ -21,7 +21,7 @@ export interface Sound {
   ambientType?: 'rain' | 'wind'
 }
 
-/** Procedural sounds — generated in real time, always available offline. */
+/** Procedural sounds - generated in real time, always available offline. */
 const PROCEDURAL: Sound[] = [
   {
     id: 'noise-white',

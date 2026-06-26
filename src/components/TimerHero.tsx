@@ -1,10 +1,9 @@
 /*
- * The hero Pomodoro timer — the primary focal point at the top of the page.
+ * The hero Pomodoro timer - the primary focal point at the top of the page.
  *
  * A grayscale circular progress ring (stroke weight + opacity, never color)
- * wraps big tight-tracked numerals and the active task name. A faint ring
- * "breathes" while the timer runs — the signature animated element. Controls
- * sit below; when idle, compact duration steppers appear. Strictly monochrome.
+ * wraps big tight-tracked numerals and the active task name. Controls sit
+ * below; when idle, compact duration steppers appear. Strictly monochrome.
  */
 import { useState } from 'react'
 import { Maximize2, Minus, Pause, Play, Plus, RotateCcw } from 'lucide-react'
@@ -51,7 +50,7 @@ export function TimerHero() {
 
       {/* Ring + numerals */}
       <div className="relative aspect-square w-full max-w-[320px]">
-        <TimerRing fraction={fraction} style={timerStyle} running={running} />
+        <TimerRing fraction={fraction} style={timerStyle} />
 
         {/* Center content */}
         <div className="absolute inset-0 flex flex-col items-center justify-center px-8 text-center">

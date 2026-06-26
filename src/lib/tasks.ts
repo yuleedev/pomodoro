@@ -1,9 +1,9 @@
 /*
- * Task persistence — the same dual strategy as history.ts.
+ * Task persistence - the same dual strategy as history.ts.
  *
  * Signed in  → rows in Supabase `tasks` (owner-only RLS).
  * Signed out → rows in localStorage.
- * On load while signed in, any local tasks are pushed up first, then cleared —
+ * On load while signed in, any local tasks are pushed up first, then cleared -
  * so tasks created while signed out follow the user to their account.
  */
 import { supabase } from './supabase'

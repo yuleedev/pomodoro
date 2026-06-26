@@ -1,5 +1,5 @@
 /*
- * History overlay — the user's past Pomodoro sessions, grouped by day.
+ * History overlay - the user's past Pomodoro sessions, grouped by day.
  *
  * Aggregate stats up top (emphasis via type size/weight, never color), then
  * hairline-divided rows. Delete a single session with a subtle inline confirm,
@@ -21,14 +21,7 @@ import { overlaySpring, softSpring, spring } from '../lib/motion'
 import { HistoryGraphs } from './HistoryGraphs'
 import { useAuth } from '../state/auth'
 import { useUI } from '../state/ui'
-import {
-  dayKey,
-  dayLabel,
-  formatDuration,
-  isToday,
-  startOfWeek,
-  timeLabel,
-} from '../lib/time'
+import { dayKey, dayLabel, formatDuration, startOfWeek, timeLabel } from '../lib/time'
 
 const DAYS_PER_PAGE = 10
 
@@ -101,7 +94,7 @@ export function HistoryView() {
         <header className="sticky top-0 z-10 -mx-5 flex items-center justify-between bg-bg/80 px-5 py-6 backdrop-blur">
           <h1 className="text-[24px] font-medium tracking-tight text-content">History</h1>
           <div className="flex items-center gap-2">
-            {/* DEV-ONLY preview helper — remove with src/lib/seed.ts */}
+            {/* DEV-ONLY preview helper - remove with src/lib/seed.ts */}
             {import.meta.env.DEV && (
               <button
                 onClick={onSeedDemo}
@@ -162,7 +155,9 @@ export function HistoryView() {
               <>
                 <HistoryGraphs sessions={sessions} />
 
-                {/* Collapsible day-by-day log — scales to thousands of sessions
+                <CategoryBreakdown sessions={sessions} />
+
+                {/* Collapsible day-by-day log - scales to thousands of sessions
                     because only expanded days render their individual rows, and
                     days are paginated. */}
                 <div className="mb-2 flex items-baseline justify-between">
@@ -239,11 +234,65 @@ function Stat({ value, label, index = 0 }: { value: string; label: string; index
       animate={{ opacity: 1, y: 0, scale: 1 }}
       transition={{ ...spring, delay: 0.05 + index * 0.06 }}
     >
-      <span className="text-[30px] font-light leading-none tracking-tight tabular-nums text-content">
+      <span className="text-[25px] font-light leading-none tracking-tight tabular-nums text-content">
         {value}
       </span>
-      <span className="mt-2 text-[12px] uppercase tracking-[0.1em] text-tertiary">{label}</span>
+      <span className="mt-1.5 text-[11px] uppercase tracking-[0.08em] text-tertiary">{label}</span>
     </motion.div>
+  )
+}
+
+/* A collapsible day - header shows the day's totals; expand to see each session.
+   Only the open day mounts its session rows, so a long history stays cheap. */
+function DayGroup({
+  group,
+  defaultOpen,
+  onDelete,
+}: {
+  group: DayGroup
+  defaultOpen: boolean
+  onDelete: (id: string) => void
+}) {
+  const [open, setOpen] = useState(defaultOpen)
+  return (
+    <div className="border-b border-hairline">
+      <button
+        onClick={() => setOpen((v) => !v)}
+        className="group flex w-full items-center gap-3 py-3.5 text-left"
+      >
+        <ChevronDown
+          className={`h-4 w-4 shrink-0 text-tertiary transition-transform duration-200 ${
+            open ? 'rotate-0' : '-rotate-90'
+          }`}
+          strokeWidth={1.5}
+        />
+        <span className="flex-1 text-[15px] text-content">{group.label}</span>
+        <span className="text-[13px] tabular-nums text-tertiary">
+          {group.items.length} {group.items.length === 1 ? 'session' : 'sessions'}
+          {group.focusMinutes > 0 && (
+            <span className="text-secondary"> · {formatDuration(group.focusMinutes)}</span>
+          )}
+        </span>
+      </button>
+
+      <AnimatePresence initial={false}>
+        {open && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: 'auto', opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={softSpring}
+            className="overflow-hidden"
+          >
+            <ul className="pb-2 pl-7">
+              {group.items.map((s) => (
+                <Row key={s.id} session={s} onDelete={() => onDelete(s.id)} />
+              ))}
+            </ul>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
   )
 }
 
@@ -259,6 +308,7 @@ function Row({ session, onDelete }: { session: SessionRecord; onDelete: () => vo
         <span className="text-[15px] text-content">
           {session.session_type === 'break' ? 'Break' : 'Focus'}
           <span className="text-tertiary"> · {formatDuration(session.duration_minutes)}</span>
+          {session.category && <span className="text-tertiary"> · {session.category}</span>}
         </span>
         {session.soundscape && (
           <p className="truncate text-[13px] text-tertiary">{session.soundscape}</p>
@@ -299,9 +349,52 @@ function EmptyState() {
     <div className="grid place-items-center py-28 text-center">
       <p className="text-[17px] text-content">No sessions yet</p>
       <p className="mt-2 max-w-[16rem] text-[14px] leading-relaxed text-tertiary">
-        Finish a focus session and it’ll appear here — quietly tracked, just for you.
+        Finish a focus session and it’ll appear here, quietly tracked, just for you.
       </p>
     </div>
+  )
+}
+
+/* All-time focus hours per category, with proportional accent bars. Only shown
+   once at least one focus session has been attributed to a category. */
+function CategoryBreakdown({ sessions }: { sessions: SessionRecord[] }) {
+  const totals = useMemo(() => {
+    const map = new Map<string, number>()
+    for (const s of sessions) {
+      if (s.session_type !== 'focus' || !s.category) continue
+      map.set(s.category, (map.get(s.category) ?? 0) + (s.duration_minutes || 0))
+    }
+    return [...map.entries()].sort((a, b) => b[1] - a[1])
+  }, [sessions])
+
+  if (totals.length === 0) return null
+  const max = Math.max(...totals.map(([, m]) => m))
+
+  return (
+    <section className="mb-10">
+      <h2 className="mb-3 text-[13px] font-medium uppercase tracking-[0.14em] text-tertiary">
+        By category
+      </h2>
+      <ul className="space-y-2.5">
+        {totals.map(([name, minutes]) => (
+          <li key={name} className="flex items-center gap-3">
+            <span className="w-24 shrink-0 truncate text-[14px] text-content">{name}</span>
+            <div className="h-2 flex-1 overflow-hidden rounded-full bg-fill">
+              <div
+                className="h-full rounded-full"
+                style={{
+                  width: `${Math.max(4, (minutes / max) * 100)}%`,
+                  backgroundColor: 'color-mix(in srgb, var(--accent) 75%, transparent)',
+                }}
+              />
+            </div>
+            <span className="w-14 shrink-0 text-right text-[13px] tabular-nums text-secondary">
+              {formatDuration(minutes)}
+            </span>
+          </li>
+        ))}
+      </ul>
+    </section>
   )
 }
 
@@ -310,14 +403,18 @@ interface DayGroup {
   key: string
   label: string
   items: SessionRecord[]
+  focusMinutes: number
 }
 
 function groupByDay(sessions: SessionRecord[]): DayGroup[] {
   const map = new Map<string, DayGroup>()
   for (const s of sessions) {
     const key = dayKey(s.started_at)
-    if (!map.has(key)) map.set(key, { key, label: dayLabel(s.started_at), items: [] })
-    map.get(key)!.items.push(s)
+    if (!map.has(key))
+      map.set(key, { key, label: dayLabel(s.started_at), items: [], focusMinutes: 0 })
+    const g = map.get(key)!
+    g.items.push(s)
+    if (s.session_type === 'focus') g.focusMinutes += s.duration_minutes || 0
   }
   // sessions arrive newest-first, so insertion order is already correct
   return [...map.values()]
@@ -326,11 +423,15 @@ function groupByDay(sessions: SessionRecord[]): DayGroup[] {
 function computeStats(sessions: SessionRecord[]) {
   const weekStart = startOfWeek()
   let weekFocusMinutes = 0
-  let todaySessions = 0
   for (const s of sessions) {
     const t = new Date(s.started_at).getTime()
     if (s.session_type === 'focus' && t >= weekStart) weekFocusMinutes += s.duration_minutes || 0
-    if (isToday(s.started_at)) todaySessions += 1
   }
-  return { weekFocusMinutes, todaySessions, totalSessions: sessions.length }
+  const byDay = focusByDay(sessions)
+  return {
+    weekFocusMinutes,
+    streak: currentStreak(byDay),
+    bestDayMinutes: bestDayMinutes(byDay),
+    totalSessions: sessions.length,
+  }
 }

@@ -1,6 +1,6 @@
 /*
  * Header account control + history entry point. Minimal and discreet:
- *   • a History button (always available — local or synced),
+ *   • a History button (always available - local or synced),
  *   • an account affordance that adapts to auth state:
  *       loading  → a quiet spinner
  *       signed out (configured) → "Sign in"

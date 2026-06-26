@@ -1,5 +1,5 @@
 /*
- * The sound library — the procedural sounds you can layer into the mix,
+ * The sound library - the procedural sounds you can layer into the mix,
  * grouped by category. Tapping a tile toggles it on/off.
  */
 import { Check, Plus } from 'lucide-react'

@@ -1,7 +1,7 @@
 /*
  * Optional category selector, shown under the timer. Pick a category to
  * attribute the next focus session to it (so you can track hours by area like
- * Math / Reading / Coding). Entirely optional — with no category selected,
+ * Math / Reading / Coding). Entirely optional - with no category selected,
  * sessions are simply untracked. Per-category totals appear in History.
  */
 import { useState } from 'react'

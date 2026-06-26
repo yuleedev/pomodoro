@@ -2,7 +2,7 @@
 
 /*
  * ─────────────────────────────────────────────────────────────────────────
- *  DESIGN SYSTEM — strictly monochrome, Apple-inspired
+ *  DESIGN SYSTEM - strictly monochrome, Apple-inspired
  * ─────────────────────────────────────────────────────────────────────────
  *  Everything differentiates by weight, spacing and subtle gray steps.
  *  No hue, ever. Tokens below are the single source of truth; components
@@ -13,7 +13,7 @@
 @custom-variant dark (&:where(.dark, .dark *));
 
 :root {
-  /* Light mode — near-white field, near-black ink. */
+  /* Light mode - near-white field, near-black ink. */
   --bg: #fafafa;
   --bg-elevated: #ffffff;
   --text: #1d1d1f;
@@ -31,14 +31,14 @@
   --ink: #1d1d1f;
   --ink-contrast: #ffffff;
   --shadow: 0 1px 2px rgba(0, 0, 0, 0.04), 0 12px 32px rgba(0, 0, 0, 0.08);
-  /* Accent — defaults to the ink tone (monochrome). Overridden inline on
+  /* Accent - defaults to the ink tone (monochrome). Overridden inline on
      <html> when the user picks a custom palette color. */
   --accent: var(--ink);
   color-scheme: light;
 }
 
 .dark {
-  /* Dark mode (default) — true near-black, off-white ink. */
+  /* Dark mode (default) - true near-black, off-white ink. */
   --bg: #0a0a0a;
   --bg-elevated: #161617;
   --text: #f5f5f7;
@@ -60,7 +60,7 @@
  * ─────────────────────────────────────────────────────────────────────────
  *  ACCENT TINTING
  * ─────────────────────────────────────────────────────────────────────────
- *  When the user picks a color, we don't just recolor the ring — we re-derive
+ *  When the user picks a color, we don't just recolor the ring - we re-derive
  *  the WHOLE palette from `--accent` (set inline on <html>). The neutrals stop
  *  being gray and pick up the hue, so e.g. pink-on-light reads as "white and
  *  pink" rather than "black, white, and pink". `color-mix` keeps every token
@@ -122,7 +122,7 @@
     -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'SF Pro Text', 'Inter',
     system-ui, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
 
-  /* Gentle, consistent rounding — 12–20px range. */
+  /* Gentle, consistent rounding - 12–20px range. */
   --radius-lg: 16px;
   --radius-xl: 20px;
   --radius-2xl: 28px;
@@ -177,7 +177,7 @@
       color 0.4s var(--ease-out);
   }
 
-  /* Faint monochrome film grain for texture — never color, barely there. */
+  /* Faint monochrome film grain for texture - never color, barely there. */
   body::before {
     content: '';
     position: fixed;
@@ -225,6 +225,8 @@
   .slider {
     -webkit-appearance: none;
     appearance: none;
+    display: block;
+    margin: 0;
     width: 100%;
     height: 3px;
     border-radius: 999px;
@@ -252,19 +254,6 @@
     border-radius: 50%;
     background: var(--ink);
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
-  }
-}
-
-/* The signature breathing pulse, driven only when audio is playing. */
-@keyframes breathe {
-  0%,
-  100% {
-    transform: scale(1);
-    opacity: 0.55;
-  }
-  50% {
-    transform: scale(1.12);
-    opacity: 0.9;
   }
 }
 

@@ -1,12 +1,12 @@
 /*
  * The timer's progress indicator, in several styles. Every style visualizes the
- * SAME thing — the fraction of time remaining — and uses the accent color
+ * SAME thing - the fraction of time remaining - and uses the accent color
  * (which defaults to the monochrome ink tone via --accent).
  *
- *  • ring      — a smooth circular border that depletes
- *  • squiggle  — a wavy circular border that depletes
- *  • segments  — a ring of tick marks; remaining ticks are accented
- *  • dot       — a marker orbiting a faint track
+ *  • ring      - a smooth circular border that depletes
+ *  • squiggle  - a wavy circular border that depletes
+ *  • segments  - a ring of tick marks; remaining ticks are accented
+ *  • dot       - a marker orbiting a faint track
  *
  * SVG `pathLength={1}` normalizes any path to length 1, so progress is just
  * strokeDashoffset = 1 − fraction regardless of the shape's real length.
@@ -21,28 +21,14 @@ const ACCENT = 'var(--accent)'
 export function TimerRing({
   fraction,
   style,
-  running = false,
 }: {
   fraction: number
   style: TimerStyle
-  running?: boolean
 }) {
   const f = Math.max(0, Math.min(1, fraction))
 
   return (
     <div className="absolute inset-0">
-      {/* Breathing glow — only while running. */}
-      {running && (
-        <div
-          className="pointer-events-none absolute inset-[12%] rounded-full"
-          style={{
-            background:
-              'radial-gradient(circle, color-mix(in srgb, var(--accent) 16%, transparent) 0%, transparent 70%)',
-            animation: 'breathe 4.5s ease-in-out infinite',
-          }}
-        />
-      )}
-
       <svg viewBox="0 0 100 100" className="h-full w-full">
         {style === 'ring' && <RingStyle f={f} />}
         {style === 'squiggle' && <SquiggleStyle f={f} />}
@@ -131,7 +117,6 @@ function DotStyle({ f }: { f: number }) {
   return (
     <g>
       <circle cx="50" cy="50" r={R} fill="none" stroke={TRACK} strokeWidth="1.5" />
-      <circle cx={x} cy={y} r="6" fill={ACCENT} opacity="0.18" />
       <circle
         cx={x}
         cy={y}

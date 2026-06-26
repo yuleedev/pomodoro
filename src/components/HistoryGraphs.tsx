@@ -1,13 +1,13 @@
 /*
- * The focus-analytics dashboard for the History view — strictly monochrome,
+ * The focus-analytics dashboard for the History view - strictly monochrome,
  * intensity carried by `color-mix(... var(--ink) …)` so everything tracks the
  * theme without a hint of hue. Four panels:
  *
- *  1. Year heatmap  — one square per day across the last 53 weeks (GitHub-style),
+ *  1. Year heatmap  - one square per day across the last 53 weeks (GitHub-style),
  *                     with month + weekday labels.
- *  2. Focus chart   — bars over a selectable range: Week / Month / Year.
- *  3. Rhythm        — share of focus by part of day (morning…night).
- *  4. Weekday       — which days of the week you focus most.
+ *  2. Focus chart   - bars over a selectable range: Week / Month / Year.
+ *  3. Rhythm        - share of focus by part of day (morning…night).
+ *  4. Weekday       - which days of the week you focus most.
  *
  * Only focus sessions count toward the totals.
  */
@@ -283,7 +283,7 @@ function Segmented({ value, onChange }: { value: Range; onChange: (r: Range) => 
   )
 }
 
-// ── 3. Rhythm — share of focus by part of day ────────────────────────────────
+// ── 3. Rhythm - share of focus by part of day ────────────────────────────────
 function Rhythm({ sessions }: { sessions: SessionRecord[] }) {
   const slices = useMemo(() => byTimeOfDay(sessions), [sessions])
   const max = Math.max(1, ...slices.map((s) => s.minutes))
@@ -305,7 +305,7 @@ function Rhythm({ sessions }: { sessions: SessionRecord[] }) {
               />
             </div>
             <span className="w-10 shrink-0 text-right text-[11px] tabular-nums text-tertiary">
-              {s.minutes ? formatDuration(s.minutes) : '—'}
+              {s.minutes ? formatDuration(s.minutes) : '·'}
             </span>
           </div>
         ))}

@@ -1,5 +1,5 @@
 /*
- * Auth store (Zustand) — wraps Supabase magic-link (passwordless) auth.
+ * Auth store (Zustand) - wraps Supabase magic-link (passwordless) auth.
  *
  * The session is persisted by supabase-js (localStorage) and auto-refreshed, so
  * users stay signed in across visits and the same account works on any device.

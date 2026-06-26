@@ -1,5 +1,5 @@
 /*
- * Demo-data generator — DEV ONLY.
+ * Demo-data generator - DEV ONLY.
  *
  * Fills localStorage with ~18 weeks of realistic Pomodoro history so the
  * History graphs (heatmap + 14-day bars) can be previewed without grinding
@@ -25,6 +25,7 @@ const SOUNDS: (string | null)[] = [
 
 const FOCUS_DURATIONS = [25, 25, 25, 30, 45, 50] // weighted toward classic 25m
 const BREAK_DURATIONS = [5, 5, 10]
+const CATEGORIES: (string | null)[] = ['Math', 'Reading', 'Coding', 'Writing', null]
 
 const randInt = (min: number, max: number) =>
   Math.floor(Math.random() * (max - min + 1)) + min
@@ -39,6 +40,7 @@ function record(start: Date, durationMin: number, type: 'focus' | 'break'): Sess
     duration_minutes: durationMin,
     session_type: type,
     soundscape: type === 'focus' ? pick(SOUNDS) : null,
+    category: type === 'focus' ? pick(CATEGORIES) : null,
     created_at: end.toISOString(),
   }
 }
@@ -61,7 +63,7 @@ export function seedDemoSessions(): SessionRecord[] {
     // Some days have no focus at all (more likely on weekends).
     if (Math.random() < (isWeekend ? 0.55 : 0.22)) continue
 
-    // How many focus blocks today — keeps totals varied so every shade appears.
+    // How many focus blocks today - keeps totals varied so every shade appears.
     const blocks = isWeekend ? randInt(1, 2) : randInt(1, 5)
 
     let hour = randInt(8, 11)
@@ -85,7 +87,7 @@ export function seedDemoSessions(): SessionRecord[] {
   try {
     localStorage.setItem(LOCAL_KEY, JSON.stringify(rows))
   } catch {
-    /* storage unavailable — caller still gets the rows to render */
+    /* storage unavailable - caller still gets the rows to render */
   }
   return rows
 }

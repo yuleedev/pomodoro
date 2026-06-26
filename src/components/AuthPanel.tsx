@@ -1,7 +1,7 @@
 /*
  * Magic-link sign-in overlay. Frictionless and passwordless: enter an email,
  * get a link, click it, you're in. Centered monochrome type, one thin input,
- * one primary button — matching the rest of the app.
+ * one primary button - matching the rest of the app.
  *
  * States: form (signed out) · sending · "check your email" · error.
  * It auto-closes once auth completes (e.g. when the link is opened here).
@@ -86,7 +86,7 @@ export function AuthPanel() {
           <>
             <h1 className="text-[30px] font-medium tracking-tight text-content">Sign in</h1>
             <p className="mx-auto mt-3 max-w-xs text-[15px] leading-relaxed text-secondary">
-              We’ll email you a magic link — no password needed.
+              We’ll email you a magic link, no password needed.
             </p>
 
             <div className="mt-9">

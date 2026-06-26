@@ -2,7 +2,7 @@
  * The to-do list, integrated with the Pomodoro timer.
  *
  *  • Add, inline-edit, complete, delete, and drag-to-reorder tasks.
- *  • Select a task to make it "active" — the hero timer runs against it, and
+ *  • Select a task to make it "active" - the hero timer runs against it, and
  *    each completed focus interval adds a session dot to it.
  *  • Completed tasks de-emphasize (strikethrough + lowered opacity) rather than
  *    vanish.
@@ -134,7 +134,7 @@ function TaskRow({ task }: { task: Task }) {
         <Check className="h-3 w-3" strokeWidth={3} />
       </button>
 
-      {/* Title — click to select as active; double-click to edit */}
+      {/* Title - click to select as active; double-click to edit */}
       {editing ? (
         <input
           autoFocus
@@ -156,7 +156,7 @@ function TaskRow({ task }: { task: Task }) {
           onClick={() => selectTask(task.id)}
           onDoubleClick={() => setEditing(true)}
           className="min-w-0 flex-1 truncate text-left text-[15px] transition-colors"
-          title={active ? 'Active — click to deselect' : 'Click to focus on this task'}
+          title={active ? 'Active, click to deselect' : 'Click to focus on this task'}
         >
           <span
             className={

@@ -1,5 +1,5 @@
 /*
- * Pure aggregation helpers over SessionRecord[] — the math behind the History
+ * Pure aggregation helpers over SessionRecord[] - the math behind the History
  * dashboard (heatmap, range charts, rhythm panels, streaks). Kept UI-free and
  * side-effect-free so they're trivial to reason about and reuse. Only focus
  * sessions count toward focus totals; breaks are ignored here.
@@ -24,7 +24,7 @@ export function focusByDay(sessions: SessionRecord[]): Map<string, number> {
 export function currentStreak(byDay: Map<string, number>): number {
   const cursor = new Date()
   cursor.setHours(0, 0, 0, 0)
-  // Today not done yet shouldn't zero the streak — fall back to yesterday.
+  // Today not done yet shouldn't zero the streak - fall back to yesterday.
   if ((byDay.get(keyOf(cursor)) ?? 0) <= 0) {
     cursor.setDate(cursor.getDate() - 1)
     if ((byDay.get(keyOf(cursor)) ?? 0) <= 0) return 0
@@ -117,6 +117,18 @@ export function byTimeOfDay(sessions: SessionRecord[]): Slice[] {
     parts[idx].minutes += s.duration_minutes || 0
   }
   return parts
+}
+
+/** Focus minutes per category (named areas only), busiest first. */
+export function byCategory(sessions: SessionRecord[]): Slice[] {
+  const map = new Map<string, number>()
+  for (const s of sessions) {
+    if (s.session_type !== 'focus' || !s.category) continue
+    map.set(s.category, (map.get(s.category) ?? 0) + (s.duration_minutes || 0))
+  }
+  return [...map.entries()]
+    .map(([label, minutes]) => ({ label, minutes }))
+    .sort((a, b) => b.minutes - a.minutes)
 }
 
 /** Focus minutes per weekday, Monday-first. */

@@ -21,7 +21,7 @@ import { App } from './App'
       }
     }
   } catch {
-    /* localStorage unavailable — nothing to migrate */
+    /* localStorage unavailable - nothing to migrate */
   }
 })()
 

@@ -1,5 +1,5 @@
 /*
- * Focus mode — a full-field, distraction-free view. Just the timer, the phase,
+ * Focus mode - a full-field, distraction-free view. Just the timer, the phase,
  * the session progress, and a way to stop. Centered monochrome type, nothing
  * else. Escape or the close control returns to the main screen.
  */
@@ -51,7 +51,7 @@ export function FocusMode() {
       {/* Phase label */}
       <p className="mb-6 text-[14px] uppercase tracking-[0.35em] text-tertiary">{label}</p>
 
-      {/* The clock — the single focal point */}
+      {/* The clock - the single focal point */}
       <div className="select-none text-[18vw] font-light leading-none tracking-tight tabular-nums text-content sm:text-[130px]">
         {stopwatch
           ? formatClock(isIdle ? 0 : elapsedSec)

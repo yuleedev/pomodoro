@@ -1,5 +1,5 @@
 /*
- * AudioEngine — owns the single AudioContext and the live node graph.
+ * AudioEngine - owns the single AudioContext and the live node graph.
  *
  * Topology:           [layer source]→[layer gain]┐
  *                     [layer source]→[layer gain]┼→ master gain → analyser → output
@@ -16,7 +16,7 @@ interface Layer {
   gain: GainNode
 }
 
-const RAMP = 0.08 // seconds — short, smooth volume ramps avoid clicks
+const RAMP = 0.08 // seconds - short, smooth volume ramps avoid clicks
 
 export class AudioEngine {
   private ctx: AudioContext | null = null
@@ -88,7 +88,7 @@ export class AudioEngine {
       node.connect(gain)
       layer.nodes.push(node)
     } else {
-      // ambient — procedural, built from the same worklet + filters/LFOs.
+      // ambient - procedural, built from the same worklet + filters/LFOs.
       this.buildAmbient(ctx, sound, gain, layer)
     }
 

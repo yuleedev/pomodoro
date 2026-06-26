@@ -46,7 +46,7 @@ function writeLocal(rows: SessionRecord[]) {
   try {
     localStorage.setItem(LOCAL_KEY, JSON.stringify(rows))
   } catch {
-    /* storage full / unavailable — nothing else we can do */
+    /* storage full / unavailable - nothing else we can do */
   }
 }
 
@@ -59,7 +59,7 @@ export async function recordSession(input: NewSession): Promise<void> {
       .from('pomodoro_sessions')
       .insert({ user_id: getCurrentUserId(), ...input })
     if (!error) return
-    // Don't lose the data — keep it locally so a later sync can recover it.
+    // Don't lose the data - keep it locally so a later sync can recover it.
     console.warn('Session insert failed, saving locally:', error.message)
   }
   const record: SessionRecord = {
@@ -130,7 +130,7 @@ export async function syncLocalSessions(userId: string): Promise<number> {
       console.warn('Could not sync local sessions:', error.message)
       return 0
     }
-    writeLocal([]) // uploaded successfully — safe to clear
+    writeLocal([]) // uploaded successfully - safe to clear
     return rows.length
   } finally {
     syncing = false

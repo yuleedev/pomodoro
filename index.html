@@ -8,9 +8,9 @@
     <meta name="theme-color" content="#FAFAFA" media="(prefers-color-scheme: light)" />
     <meta
       name="description"
-      content="Cadence — a calm, focus-first study app with a Pomodoro timer, tasks, and ambient sound."
+      content="Cadence - a calm, focus-first study app with a Pomodoro timer, tasks, and ambient sound."
     />
-    <title>Cadence — focus timer</title>
+    <title>Cadence - focus timer</title>
     <script>
       // Apply the saved theme AND accent tint before first paint to avoid a
       // flash of the wrong background. Dark mode is the default.
@@ -21,7 +21,7 @@
           var theme = saved === 'light' || saved === 'dark' ? saved : 'dark';
           root.classList.toggle('dark', theme === 'dark');
         } catch (e) {
-          /* localStorage unavailable — keep the default dark class */
+          /* localStorage unavailable - keep the default dark class */
         }
         try {
           // Mirror the store's applyAccent(): set --accent + .tinted so the
@@ -33,7 +33,7 @@
             root.classList.add('tinted');
           }
         } catch (e) {
-          /* no/invalid persisted state — stay monochrome */
+          /* no/invalid persisted state - stay monochrome */
         }
       })();
     </script>

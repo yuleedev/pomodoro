@@ -1,5 +1,5 @@
 /*
- * Category persistence — the same dual strategy as tasks.ts / history.ts.
+ * Category persistence - the same dual strategy as tasks.ts / history.ts.
  *
  * Categories are optional labels for tracking focus hours by area (e.g. Math,
  * Reading, Coding). Signed in → Supabase `categories` (owner-only RLS); signed

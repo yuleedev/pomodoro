@@ -1,5 +1,5 @@
 /*
- * The mixer — every active sound with its own thin volume slider, so layers
+ * The mixer - every active sound with its own thin volume slider, so layers
  * like "rain + brown noise" can be balanced individually. Empty until the first
  * sound is added (clean empty state).
  */

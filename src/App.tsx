@@ -50,8 +50,11 @@ export function App() {
         <Header />
 
         <div className="space-y-12 pt-2">
-          {/* Centerpiece */}
-          <TimerHero />
+          {/* Centerpiece + optional category attribution */}
+          <div className="space-y-6">
+            <TimerHero />
+            <CategoryBar />
+          </div>
 
           {/* Integrated to-do list */}
           <TaskList />

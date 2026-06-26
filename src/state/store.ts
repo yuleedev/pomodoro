@@ -1,5 +1,5 @@
 /*
- * Application store (Zustand) — the single source of truth for the UI.
+ * Application store (Zustand) - the single source of truth for the UI.
  *
  * It owns playback intent (which sounds, at what volume), the focus timer, and
  * the theme. It drives the imperative AudioEngine in response to user actions.
@@ -55,7 +55,7 @@ interface State {
   elapsedSec: number
   completedSessions: number
   timerRunning: boolean
-  /** Epoch ms when the current phase began — used as a session's started_at. */
+  /** Epoch ms when the current phase began - used as a session's started_at. */
   phaseStartedAt: number | null
 
   focusMode: boolean
@@ -174,7 +174,7 @@ export const useStore = create<State>()(
       setTheme: (theme) => {
         document.documentElement.classList.toggle('dark', theme === 'dark')
         // Mirror to a dedicated key so the pre-paint script (index.html) can
-        // apply the right theme before React loads — no flash.
+        // apply the right theme before React loads - no flash.
         try {
           localStorage.setItem('cadence:theme', theme)
         } catch {
@@ -425,7 +425,7 @@ export const useStore = create<State>()(
     }),
     {
       name: 'cadence:state',
-      // Persist only durable preferences — never live playback state.
+      // Persist only durable preferences - never live playback state.
       partialize: (s) => ({
         theme: s.theme,
         masterVolume: s.masterVolume,
@@ -464,7 +464,7 @@ function startTicking(set: SetFn, get: GetFn) {
   stopTicking()
   tickHandle = window.setInterval(() => {
     const { remainingSec, phase, timer, completedSessions, timerMode } = get()
-    // Stopwatch simply accumulates — no phases, no boundary.
+    // Stopwatch simply accumulates - no phases, no boundary.
     if (timerMode === 'stopwatch') {
       set({ elapsedSec: get().elapsedSec + 1 })
       return
@@ -473,14 +473,14 @@ function startTicking(set: SetFn, get: GetFn) {
       set({ remainingSec: remainingSec - 1 })
       return
     }
-    // Phase boundary reached — the phase that just ended is a completed session.
+    // Phase boundary reached - the phase that just ended is a completed session.
     const startedAt = get().phaseStartedAt
     if (phase === 'work') {
       logCompleted('focus', timer.workMinutes, startedAt, get)
       get().bumpActiveTaskSession() // credit the active task with a pomodoro
       const done = completedSessions + 1
       if (done >= timer.sessions) {
-        // All sessions complete — wind down.
+        // All sessions complete - wind down.
         void engine.chime(false)
         stopTicking()
         set({
@@ -500,7 +500,7 @@ function startTicking(set: SetFn, get: GetFn) {
         })
       }
     } else {
-      // Break finished — record it, then back to work.
+      // Break finished - record it, then back to work.
       logCompleted('break', timer.breakMinutes, startedAt, get)
       void engine.chime(true)
       set({ phase: 'work', remainingSec: timer.workMinutes * 60, phaseStartedAt: Date.now() })

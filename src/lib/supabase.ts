@@ -5,7 +5,7 @@
  * every row to its owner.
  *
  * If the env vars are absent the client is `null` and the app runs in
- * local-only mode (history in localStorage, no sign-in) — so it still works
+ * local-only mode (history in localStorage, no sign-in) - so it still works
  * out of the box before Supabase is set up.
  */
 import { createClient, type SupabaseClient } from '@supabase/supabase-js'

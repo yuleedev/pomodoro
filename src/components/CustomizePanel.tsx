@@ -1,5 +1,5 @@
 /*
- * Customization panel — theme (black/white), timer style, and accent color.
+ * Customization panel - theme (black/white), timer style, and accent color.
  *
  * The app is monochrome by default; here the user can pick an accent or build
  * their own palette (presets + their own colors via the native color picker).
@@ -162,7 +162,7 @@ export function CustomizePanel() {
             </label>
           </div>
           <p className="mt-3 text-[12px] leading-relaxed text-tertiary">
-            Your color tints the entire app — background, text, and controls — not
+            Your color tints the entire app - background, text, and controls - not
             just the ring. Tap{' '}
             <span className="inline-flex h-4 w-4 -translate-y-px items-center justify-center rounded-full border border-dashed border-hairline-strong align-middle">
               <Plus className="h-2.5 w-2.5" strokeWidth={2} />

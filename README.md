@@ -17,6 +17,10 @@ default, with an optional accent color you can set (or build your own palette).
   it, its name shows under the clock, and every completed focus interval adds a
   session dot to it. Completed tasks de-emphasize (strikethrough) rather than
   vanish.
+- **Categories (optional)** — create categories (e.g. Math, Reading, Coding) and
+  pick an active one under the timer to attribute completed focus sessions to it.
+  History shows a per-category **hours breakdown**. Leave none selected to track
+  nothing — it's entirely optional.
 - **Soundscapes (secondary)** — procedural white/pink/brown noise and rain/wind
   generated live with the Web Audio API (offline, no files, no licensing); layer
   sounds with per-track volume.
@@ -194,7 +198,7 @@ Shortcuts are ignored while you're typing in a field.
 
 ```
 public/noise-processor.js   Procedural noise AudioWorklet
-supabase/schema.sql         pomodoro_sessions + tasks tables, RLS (run in Supabase)
+supabase/schema.sql         pomodoro_sessions + tasks + categories tables, RLS
 src/
   index.css                 Design system: monochrome tokens, typography, texture
   audio/
@@ -205,6 +209,7 @@ src/
     user.ts                 Shared current-user id (no import cycles)
     history.ts              Session recording: Supabase or localStorage + sync
     tasks.ts                Task persistence: Supabase or localStorage + sync
+    categories.ts           Category persistence: Supabase or localStorage + sync
     time.ts                 Clock / duration / day-grouping helpers
   state/
     store.ts                Player + timer + tasks state (Zustand) + persist
