@@ -3,7 +3,7 @@
   "private": true,
   "version": "1.0.0",
   "type": "module",
-  "description": "Cadence — a focus-first study app: Pomodoro timer, tasks, and ambient soundscapes.",
+  "description": "pomopomo. — a focus-first study app: Pomodoro timer, tasks, and ambient soundscapes.",
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",

@@ -12,7 +12,7 @@ export function Header() {
 
   return (
     <header className="flex items-center justify-between py-6">
-      <span className="text-[17px] font-medium tracking-tight text-content">Cadence</span>
+      <span className="text-[17px] font-medium tracking-tight text-content">pomopomo.</span>
       <div className="flex items-center gap-1">
         <IconButton icon={AudioLines} label="Sounds" onClick={openSound} />
         <IconButton icon={Settings} label="Settings" onClick={openSettings} />
