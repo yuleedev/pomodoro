@@ -19,6 +19,7 @@ export function FocusMode() {
   const pauseTimer = useStore((s) => s.pauseTimer)
   const resetTimer = useStore((s) => s.resetTimer)
   const exitFocus = useStore((s) => s.exitFocus)
+  const activeTask = useStore((s) => s.tasks.find((t) => t.id === s.selectedTaskId))
 
   const isIdle = phase === 'idle'
   const label = isIdle
@@ -47,6 +48,13 @@ export function FocusMode() {
       <div className="select-none text-[18vw] font-light leading-none tracking-tight tabular-nums text-content sm:text-[130px]">
         {isIdle ? formatClock(timer.workMinutes * 60) : formatClock(remainingSec)}
       </div>
+
+      {/* Active task */}
+      {activeTask && (
+        <p className="mt-6 max-w-xs truncate px-6 text-center text-[15px] text-secondary">
+          {activeTask.title}
+        </p>
+      )}
 
       {/* Session progress dots */}
       {timer.sessions > 1 && (

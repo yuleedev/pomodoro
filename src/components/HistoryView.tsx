@@ -14,6 +14,7 @@ import {
   listSessions,
   type SessionRecord,
 } from '../lib/history'
+import { HistoryGraphs } from './HistoryGraphs'
 import { useAuth } from '../state/auth'
 import { useUI } from '../state/ui'
 import {
@@ -123,6 +124,8 @@ export function HistoryView() {
               <EmptyState />
             ) : (
               <>
+                <HistoryGraphs sessions={sessions} />
+
                 {groups.map((group) => (
                   <section key={group.key} className="mb-8">
                     <h2 className="mb-1 text-[13px] font-medium uppercase tracking-[0.14em] text-tertiary">

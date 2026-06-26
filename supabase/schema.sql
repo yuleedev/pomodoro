@@ -52,3 +52,48 @@ create policy "Users can delete their own sessions"
   on public.pomodoro_sessions
   for delete
   using (auth.uid() = user_id);
+
+-- ───────────────────────────────────────────────────────────────────────────
+--  tasks — the to-do list, integrated with the Pomodoro timer.
+-- ───────────────────────────────────────────────────────────────────────────
+create table if not exists public.tasks (
+  id            uuid primary key default gen_random_uuid(),
+  user_id       uuid not null references auth.users (id) on delete cascade,
+  title         text not null,
+  completed     boolean not null default false,
+  session_count int not null default 0,        -- pomodoros logged against this task
+  position      int not null default 0,         -- sort order (ascending)
+  created_at    timestamptz not null default now()
+);
+
+create index if not exists tasks_user_position_idx
+  on public.tasks (user_id, position asc);
+
+-- Same owner-only Row-Level Security as pomodoro_sessions.
+alter table public.tasks enable row level security;
+
+drop policy if exists "Users can read their own tasks"   on public.tasks;
+drop policy if exists "Users can insert their own tasks" on public.tasks;
+drop policy if exists "Users can update their own tasks" on public.tasks;
+drop policy if exists "Users can delete their own tasks" on public.tasks;
+
+create policy "Users can read their own tasks"
+  on public.tasks
+  for select
+  using (auth.uid() = user_id);
+
+create policy "Users can insert their own tasks"
+  on public.tasks
+  for insert
+  with check (auth.uid() = user_id);
+
+create policy "Users can update their own tasks"
+  on public.tasks
+  for update
+  using (auth.uid() = user_id)
+  with check (auth.uid() = user_id);
+
+create policy "Users can delete their own tasks"
+  on public.tasks
+  for delete
+  using (auth.uid() = user_id);

@@ -10,7 +10,7 @@ export function Header() {
 
   return (
     <header className="flex items-center justify-between py-6">
-      <span className="text-[16px] font-medium tracking-tight text-content">Soundscape</span>
+      <span className="text-[16px] font-medium tracking-tight text-content">Cadence</span>
       <div className="flex items-center gap-1">
         <AccountMenu />
         <button

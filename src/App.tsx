@@ -1,18 +1,19 @@
 /*
- * App shell. Composes the calm, single-column layout: a quiet header, a hero
- * built around the breathing visualizer, then the sound library, mixer, and
- * focus session. The frosted control bar is always present; focus mode, the
- * sign-in panel, and the history view each take over the whole field.
+ * App shell. Focus-first layout: the Pomodoro hero timer leads, the task list
+ * sits directly beneath it (they work together), and the soundscape mixer is a
+ * secondary section below a hairline. The frosted control bar is always present;
+ * focus mode, sign-in, and history each take over the whole field.
  */
 import { useEffect } from 'react'
 import { AuthPanel } from './components/AuthPanel'
 import { ControlBar } from './components/ControlBar'
-import { FocusCard } from './components/FocusCard'
 import { FocusMode } from './components/FocusMode'
 import { Header } from './components/Header'
 import { HistoryView } from './components/HistoryView'
 import { Mixer } from './components/Mixer'
 import { SoundLibrary } from './components/SoundLibrary'
+import { TaskList } from './components/TaskList'
+import { TimerHero } from './components/TimerHero'
 import { useKeyboard } from './hooks/useKeyboard'
 import { useAuth } from './state/auth'
 import { useStore } from './state/store'
@@ -21,25 +22,40 @@ import { useUI } from './state/ui'
 export function App() {
   useKeyboard()
   const focusMode = useStore((s) => s.focusMode)
+  const loadTasks = useStore((s) => s.loadTasks)
   const authOpen = useUI((s) => s.authOpen)
   const historyOpen = useUI((s) => s.historyOpen)
   const initAuth = useAuth((s) => s.init)
+  const userId = useAuth((s) => s.user?.id)
+  const authStatus = useAuth((s) => s.status)
 
   // Resolve the persisted session and start listening for magic-link returns.
   useEffect(() => {
     initAuth()
   }, [initAuth])
 
+  // Load tasks initially and reload when auth changes (local ↔ remote).
+  useEffect(() => {
+    void loadTasks()
+  }, [loadTasks, userId, authStatus])
+
   return (
     <div className="min-h-dvh">
       <div className="mx-auto w-full max-w-xl px-5 pb-40">
         <Header />
 
-        {/* Generous spacing, lots of air. Playback lives in the control bar. */}
-        <div className="space-y-14 pt-8">
-          <SoundLibrary />
-          <Mixer />
-          <FocusCard />
+        <div className="space-y-12 pt-2">
+          {/* Centerpiece */}
+          <TimerHero />
+
+          {/* Integrated to-do list */}
+          <TaskList />
+
+          {/* Secondary: ambient sound */}
+          <div className="space-y-10 border-t border-hairline pt-10">
+            <SoundLibrary />
+            <Mixer />
+          </div>
         </div>
       </div>
 

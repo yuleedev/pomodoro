@@ -1,9 +1,9 @@
 {
-  "name": "monochrome-soundscape",
+  "name": "cadence",
   "private": true,
   "version": "1.0.0",
   "type": "module",
-  "description": "A minimalist, AI-powered soundscape player for focused study.",
+  "description": "Cadence — a focus-first study app: Pomodoro timer, tasks, and ambient soundscapes.",
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
@@ -12,6 +12,7 @@
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.108.2",
+    "framer-motion": "^12.42.0",
     "lucide-react": "^0.468.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",

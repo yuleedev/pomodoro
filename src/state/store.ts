@@ -11,6 +11,14 @@ import { persist } from 'zustand/middleware'
 import { engine } from '../audio/engine'
 import { buildCatalog, type Sound } from '../audio/catalog'
 import { recordSession } from '../lib/history'
+import {
+  createTask,
+  deleteTaskRow,
+  fetchTasks,
+  saveOrder,
+  updateTask,
+  type Task,
+} from '../lib/tasks'
 
 export type Theme = 'dark' | 'light'
 export type TimerPhase = 'idle' | 'work' | 'break'
@@ -41,6 +49,11 @@ interface State {
 
   focusMode: boolean
 
+  /** To-do list, ordered by position. */
+  tasks: Task[]
+  /** The task the timer is currently running "against". */
+  selectedTaskId: string | null
+
   // ── actions ──────────────────────────────────────────────────────────────
   toggleTheme: () => void
   setMasterVolume: (v: number) => void
@@ -57,6 +70,16 @@ interface State {
 
   enterFocus: () => void
   exitFocus: () => void
+
+  // tasks
+  loadTasks: () => Promise<void>
+  addTask: (title: string) => void
+  renameTask: (id: string, title: string) => void
+  toggleTask: (id: string) => void
+  deleteTask: (id: string) => void
+  reorderTasks: (ordered: Task[]) => void
+  selectTask: (id: string | null) => void
+  bumpActiveTaskSession: () => void
 }
 
 /** Resolve a sound by id from the built-in catalog or the user's files. */
@@ -85,9 +108,19 @@ export const useStore = create<State>()(
 
       focusMode: false,
 
+      tasks: [],
+      selectedTaskId: null,
+
       toggleTheme: () => {
         const theme = get().theme === 'dark' ? 'light' : 'dark'
         document.documentElement.classList.toggle('dark', theme === 'dark')
+        // Mirror to a dedicated key so the pre-paint script (index.html) can
+        // apply the right theme before React loads — no flash.
+        try {
+          localStorage.setItem('cadence:theme', theme)
+        } catch {
+          /* ignore */
+        }
         set({ theme })
       },
 
@@ -207,21 +240,98 @@ export const useStore = create<State>()(
 
       enterFocus: () => set({ focusMode: true }),
       exitFocus: () => set({ focusMode: false }),
+
+      // ── tasks ──────────────────────────────────────────────────────────────
+      loadTasks: async () => {
+        try {
+          set({ tasks: await fetchTasks() })
+        } catch {
+          /* keep whatever we have on a transient failure */
+        }
+      },
+
+      addTask: (title) => {
+        const t = title.trim()
+        if (!t) return
+        const { tasks } = get()
+        const position = tasks.reduce((m, x) => Math.max(m, x.position), -1) + 1
+        const task: Task = {
+          id: crypto.randomUUID(),
+          title: t,
+          completed: false,
+          session_count: 0,
+          position,
+          created_at: new Date().toISOString(),
+        }
+        set({ tasks: [...tasks, task] })
+        void createTask(task)
+      },
+
+      renameTask: (id, title) => {
+        const t = title.trim()
+        const task = get().tasks.find((x) => x.id === id)
+        if (!task || !t) return
+        const updated = { ...task, title: t }
+        set({ tasks: get().tasks.map((x) => (x.id === id ? updated : x)) })
+        void updateTask(updated)
+      },
+
+      toggleTask: (id) => {
+        const task = get().tasks.find((x) => x.id === id)
+        if (!task) return
+        const updated = { ...task, completed: !task.completed }
+        set({ tasks: get().tasks.map((x) => (x.id === id ? updated : x)) })
+        void updateTask(updated)
+      },
+
+      deleteTask: (id) => {
+        const { tasks, selectedTaskId } = get()
+        set({
+          tasks: tasks.filter((x) => x.id !== id),
+          selectedTaskId: selectedTaskId === id ? null : selectedTaskId,
+        })
+        void deleteTaskRow(id)
+      },
+
+      reorderTasks: (ordered) => {
+        const withPos = ordered.map((t, i) => ({ ...t, position: i }))
+        set({ tasks: withPos })
+        void saveOrder(withPos)
+      },
+
+      // Toggle selection: clicking the active task again deselects it.
+      selectTask: (id) => set({ selectedTaskId: get().selectedTaskId === id ? null : id }),
+
+      bumpActiveTaskSession: () => {
+        const { selectedTaskId, tasks } = get()
+        if (!selectedTaskId) return
+        const task = tasks.find((x) => x.id === selectedTaskId)
+        if (!task) return
+        const updated = { ...task, session_count: task.session_count + 1 }
+        set({ tasks: tasks.map((x) => (x.id === task.id ? updated : x)) })
+        void updateTask(updated)
+      },
     }),
     {
-      name: 'soundscape:state',
+      name: 'cadence:state',
       // Persist only durable preferences — never live playback state.
       partialize: (s) => ({
         theme: s.theme,
         masterVolume: s.masterVolume,
         mix: s.mix,
         timer: s.timer,
+        selectedTaskId: s.selectedTaskId,
       }),
       onRehydrateStorage: () => (state) => {
         // Keep the <html> class in sync with the persisted theme, and never
         // resume audio automatically — wait for a user gesture.
         if (state) {
           document.documentElement.classList.toggle('dark', state.theme === 'dark')
+          try {
+            localStorage.setItem('cadence:theme', state.theme)
+          } catch {
+            /* ignore */
+          }
           state.isPlaying = false
           state.remainingSec = state.timer.workMinutes * 60
         }
@@ -243,6 +353,7 @@ function startTicking(set: SetFn, get: GetFn) {
     const startedAt = get().phaseStartedAt
     if (phase === 'work') {
       logCompleted('focus', timer.workMinutes, startedAt, get)
+      get().bumpActiveTaskSession() // credit the active task with a pomodoro
       const done = completedSessions + 1
       if (done >= timer.sessions) {
         // All sessions complete — wind down.

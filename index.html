@@ -8,15 +8,15 @@
     <meta name="theme-color" content="#FAFAFA" media="(prefers-color-scheme: light)" />
     <meta
       name="description"
-      content="A calm, minimalist soundscape player for deep focus and study."
+      content="Cadence — a calm, focus-first study app with a Pomodoro timer, tasks, and ambient sound."
     />
-    <title>Soundscape — focus audio</title>
+    <title>Cadence — focus timer</title>
     <script>
       // Apply the saved theme before first paint to avoid a flash of the wrong
       // background. Dark mode is the default.
       (function () {
         try {
-          var saved = localStorage.getItem('soundscape:theme');
+          var saved = localStorage.getItem('cadence:theme');
           var theme = saved === 'light' || saved === 'dark' ? saved : 'dark';
           document.documentElement.classList.toggle('dark', theme === 'dark');
         } catch (e) {

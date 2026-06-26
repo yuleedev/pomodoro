@@ -11,8 +11,9 @@
  * is via setCurrentUser().
  */
 import { supabase } from './supabase'
+import { getCurrentUserId } from './user'
 
-const LOCAL_KEY = 'soundscape:sessions'
+const LOCAL_KEY = 'cadence:sessions'
 
 export interface SessionRecord {
   id: string
@@ -27,13 +28,7 @@ export interface SessionRecord {
 /** A completed session before it's been given an id/created_at. */
 export type NewSession = Omit<SessionRecord, 'id' | 'created_at'>
 
-// The signed-in user's id, kept in sync by the auth store. null = signed out.
-let currentUserId: string | null = null
-export function setCurrentUser(id: string | null) {
-  currentUserId = id
-}
-
-const isRemote = () => Boolean(currentUserId && supabase)
+const isRemote = () => Boolean(getCurrentUserId() && supabase)
 
 // ── localStorage helpers ────────────────────────────────────────────────────
 function readLocal(): SessionRecord[] {
@@ -60,7 +55,7 @@ export async function recordSession(input: NewSession): Promise<void> {
   if (isRemote()) {
     const { error } = await supabase!
       .from('pomodoro_sessions')
-      .insert({ user_id: currentUserId, ...input })
+      .insert({ user_id: getCurrentUserId(), ...input })
     if (!error) return
     // Don't lose the data — keep it locally so a later sync can recover it.
     console.warn('Session insert failed, saving locally:', error.message)
@@ -102,7 +97,7 @@ export async function clearAllSessions(): Promise<void> {
     const { error } = await supabase!
       .from('pomodoro_sessions')
       .delete()
-      .eq('user_id', currentUserId)
+      .eq('user_id', getCurrentUserId())
     if (error) throw new Error(error.message)
     return
   }

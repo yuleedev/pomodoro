@@ -110,6 +110,13 @@
   body {
     margin: 0;
     background-color: var(--bg);
+    /* Subtle grayscale depth: a soft top highlight so the field isn't dead flat. */
+    background-image: radial-gradient(
+      120% 75% at 50% -15%,
+      color-mix(in srgb, var(--ink) 5%, transparent),
+      transparent 55%
+    );
+    background-attachment: fixed;
     color: var(--text);
     font-family: var(--font-sans);
     font-weight: 400;
@@ -118,6 +125,17 @@
     transition:
       background-color 0.4s var(--ease-out),
       color 0.4s var(--ease-out);
+  }
+
+  /* Faint monochrome film grain for texture — never color, barely there. */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    z-index: -1; /* behind app content, above the background */
+    pointer-events: none;
+    opacity: 0.025;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
   }
 
   /* Confident headings: tight tracking, light weight. */

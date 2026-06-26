@@ -9,7 +9,8 @@
 import { create } from 'zustand'
 import type { User } from '@supabase/supabase-js'
 import { isSupabaseConfigured, supabase } from '../lib/supabase'
-import { setCurrentUser, syncLocalSessions } from '../lib/history'
+import { setCurrentUser } from '../lib/user'
+import { syncLocalSessions } from '../lib/history'
 
 export type AuthStatus = 'loading' | 'signed_in' | 'signed_out'
 

@@ -1,30 +1,41 @@
-# Soundscape
+# Cadence
 
-A minimalist, local-first soundscape player for studying and focus. Calm,
-precise, strictly monochrome — built to get out of your way.
+A focus-first study app. A Pomodoro timer at its heart, an integrated to-do
+list, and ambient soundscapes underneath — calm, precise, and strictly
+monochrome (black/white/gray only, no color accents ever).
 
-- **Procedural noise** — white / pink / brown, generated in real time with the
-  Web Audio API. No files, no licensing, always works offline.
-- **Ambient layers** — procedural rain and wind, mixable with everything else.
-- **Bring your own audio** — add lofi/jazz/anything from your device, or wire up
-  royalty-free streams in one config file.
-- **Mixer** — layer multiple sounds (e.g. *rain + brown noise*), each with its
-  own volume.
-- **Focus sessions** — a built-in Pomodoro-style timer with a distraction-free
-  fullscreen mode.
-- **Accounts & cross-device history** *(optional)* — passwordless magic-link
-  sign-in via Supabase. Completed sessions are recorded to your account and show
-  up in a clean history view on any device. Signed out, history is kept locally
-  and synced up the next time you sign in.
-- **Local-first** — your last mix, volumes, timer settings, and theme persist in
-  `localStorage`. The core player needs no backend at all; Supabase only adds the
-  optional accounts + synced history.
+- **Pomodoro timer (the centerpiece)** — a large, centered hero timer with a
+  grayscale circular progress ring, big tight-tracked numerals, smooth
+  start/pause/reset, and a distraction-free fullscreen focus mode. A faint ring
+  "breathes" while it runs — the one signature animated element.
+- **Tasks, integrated with the timer** — add, inline-edit, complete, delete, and
+  **drag to reorder**. Select a task to make it *active*: the timer runs against
+  it, its name shows under the clock, and every completed focus interval adds a
+  session dot to it. Completed tasks de-emphasize (strikethrough) rather than
+  vanish.
+- **Soundscapes (secondary)** — procedural white/pink/brown noise and rain/wind
+  generated live with the Web Audio API (offline, no licensing); add your own
+  audio from your device, or wire up royalty-free streams in one config file;
+  layer sounds with per-track volume.
+- **Accounts & cross-device sync** *(optional)* — passwordless magic-link sign-in
+  via Supabase. Tasks and completed focus sessions sync to your account and work
+  on any device. Signed out, everything is kept in `localStorage` and synced up
+  the next time you sign in.
+- **History** — a monochrome view of past sessions with a contribution-style
+  activity heatmap, a 14-day focus bar chart, day groups, and delete controls.
+- **Local-first** — preferences, tasks, mix, and history persist locally; the
+  core app needs no backend. Supabase only adds optional accounts + sync.
 
 ## Tech
 
 React + Vite + TypeScript, Web Audio API, Tailwind CSS, Zustand, Supabase (auth +
-Postgres). Icons from Lucide. Dependency-light; the audio player is entirely
-client-side.
+Postgres), and Framer Motion. Icons from Lucide.
+
+**Why Framer Motion?** One small, focused dependency powers the springy task
+reorder (its accessible `Reorder` primitive — handle-gated drag, no heavyweight
+drag-and-drop library) plus the animated add/remove of list items. Everything
+else (timer ring, hovers, presses, theme transition, the breathing element) is
+hand-built CSS — no other UI/animation libraries.
 
 ## Run it
 
@@ -63,8 +74,9 @@ history that follows the user across devices.
 
 Open **SQL Editor → New query**, paste the contents of
 [`supabase/schema.sql`](./supabase/schema.sql), and **Run**. This creates the
-`pomodoro_sessions` table, enables RLS, and adds policies so each user can only
-read/insert/update/delete **their own** rows. (The file is safe to re-run.)
+`pomodoro_sessions` and `tasks` tables, enables RLS on both, and adds policies so
+each user can only read/insert/update/delete **their own** rows
+(`user_id = auth.uid()`). (The file is safe to re-run.)
 
 > ⚠️ RLS is what makes the public anon key safe in the browser. Don't skip it —
 > with RLS off, the anon key could read everyone's data.
@@ -111,12 +123,18 @@ For production volume, configure your own SMTP under **Authentication → Emails
   back in the app, authenticated. The session persists, so you stay signed in
   across visits and devices.
 - **Recording**: when a focus or break interval completes, a row is written to
-  `pomodoro_sessions` (or to `localStorage` if signed out).
-- **Sync on login**: any sessions saved while signed out are pushed to your
-  account the first time you sign in, then cleared locally.
+  `pomodoro_sessions` (or to `localStorage` if signed out), and the active task's
+  session count is incremented.
+- **Tasks**: created/edited/reordered tasks save to the `tasks` table when signed
+  in, or `localStorage` when signed out.
+- **Sync on login**: any sessions and tasks saved while signed out are pushed to
+  your account the first time you sign in, then cleared locally. (Tasks sync on
+  the first load after sign-in; sessions sync on the sign-in event.)
 - **History view**: the **clock icon** in the header opens it — aggregate stats,
-  sessions grouped by day, delete a single session (inline confirm) or clear all.
-  Deletes hit Supabase directly; RLS guarantees only your rows are affected.
+  a monochrome activity heatmap (contribution-graph style) and a 14-day focus
+  bar chart, sessions grouped by day, delete a single session (inline confirm)
+  or clear all. Deletes hit Supabase directly; RLS guarantees only your rows are
+  affected.
 - **Sign out**: the account avatar (top right) → **Sign out**.
 
 ## Adding your own sounds
@@ -177,31 +195,36 @@ Shortcuts are ignored while you're typing in a field.
   slow LFOs (rain = filtered white noise with gentle swells; wind = filtered
   brown noise with a drifting cutoff).
 - **Files & streams** play through an `HTMLAudioElement` routed into the graph.
-- Everything mixes into a master gain → analyser → output. Each sound has its
-  own gain node (its volume slider); the analyser drives the breathing
-  visualizer. See `src/audio/engine.ts`.
+- Everything mixes into a master gain → output. Each sound has its own gain node
+  (its volume slider). See `src/audio/engine.ts`. The timer's breathing ring is a
+  pure-CSS animation tied to the running state, not the audio signal.
 
 ## Project structure
 
 ```
 public/noise-processor.js   Procedural noise AudioWorklet
-supabase/schema.sql         Table + Row-Level Security policies (run in Supabase)
+supabase/schema.sql         pomodoro_sessions + tasks tables, RLS (run in Supabase)
 src/
-  index.css                 Design system: monochrome tokens, typography, base
+  index.css                 Design system: monochrome tokens, typography, texture
   audio/
     catalog.ts              The sound library (procedural + configured streams)
     engine.ts               Web Audio graph manager
   config/sources.ts         ← add royalty-free jazz/lofi/ambient streams here
   lib/
     supabase.ts             Supabase client (from VITE_ env vars; null if unset)
+    user.ts                 Shared current-user id (no import cycles)
     history.ts              Session recording: Supabase or localStorage + sync
+    tasks.ts                Task persistence: Supabase or localStorage + sync
     time.ts                 Clock / duration / day-grouping helpers
   state/
-    store.ts                Player + timer state (Zustand) + localStorage persist
+    store.ts                Player + timer + tasks state (Zustand) + persist
     auth.ts                 Magic-link auth state
     ui.ts                   Auth/history overlay open-state
   hooks/useKeyboard.ts      Keyboard shortcuts
-  components/               UI (visualizer, controls, library, mixer, focus mode,
-                            auth panel, account menu, history view)
-  App.tsx                   Layout
+  components/
+    TimerHero.tsx           The centerpiece Pomodoro timer + progress ring
+    TaskList.tsx            Drag-reorderable to-do list, wired to the timer
+    FocusMode.tsx           Fullscreen distraction-free timer
+    ...                     ControlBar, SoundLibrary, Mixer, History*, auth, header
+  App.tsx                   Layout (timer → tasks → soundscape)
 ```
