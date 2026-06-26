@@ -12,7 +12,10 @@ export function Header() {
 
   return (
     <header className="flex items-center justify-between py-6">
-      <span className="text-[17px] font-medium tracking-tight text-content">pomopomo.</span>
+      <span className="flex items-center gap-1.5 text-[17px] font-medium tracking-tight text-content">
+        <TomatoIcon className="h-[18px] w-[18px]" />
+        pomopomo.
+      </span>
       <div className="flex items-center gap-1">
         <IconButton icon={AudioLines} label="Sounds" onClick={openSound} />
         <IconButton icon={Settings} label="Settings" onClick={openSettings} />
@@ -21,6 +24,29 @@ export function Header() {
         <AccountMenu />
       </div>
     </header>
+  )
+}
+
+/* Small line-art tomato for the wordmark (Lucide has no tomato). */
+function TomatoIcon({ className }: { className?: string }) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={1.5}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className={className}
+      aria-hidden="true"
+    >
+      {/* body */}
+      <circle cx="12" cy="14.5" r="6.5" />
+      {/* leafy calyx + stem */}
+      <path d="M12 8V5.5" />
+      <path d="M12 8c-1.6 0-2.8-.7-3.5-2" />
+      <path d="M12 8c1.6 0 2.8-.7 3.5-2" />
+    </svg>
   )
 }
 
