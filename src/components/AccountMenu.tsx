@@ -9,7 +9,7 @@
  */
 import { useState } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
-import { Clock, Loader2, LogOut, User } from 'lucide-react'
+import { BarChart3, Loader2, LogOut, User } from 'lucide-react'
 import { useAuth } from '../state/auth'
 import { useUI } from '../state/ui'
 import { spring } from '../lib/motion'
@@ -31,7 +31,7 @@ export function AccountMenu() {
         aria-label="History"
         className="grid h-9 w-9 place-items-center rounded-full text-secondary transition-colors duration-200 hover:bg-fill hover:text-content"
       >
-        <Clock className="h-[18px] w-[18px]" strokeWidth={1.5} />
+        <BarChart3 className="h-[18px] w-[18px]" strokeWidth={1.5} />
       </button>
 
       {/* Account affordance (only when sign-in is possible). */}
