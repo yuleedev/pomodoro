@@ -25,7 +25,7 @@ export interface Sound {
 const PROCEDURAL: Sound[] = [
   {
     id: 'noise-white',
-    name: 'White noise',
+    name: 'White',
     kind: 'noise',
     category: 'Noise',
     noiseType: 'white',
@@ -34,7 +34,7 @@ const PROCEDURAL: Sound[] = [
   },
   {
     id: 'noise-pink',
-    name: 'Pink noise',
+    name: 'Pink',
     kind: 'noise',
     category: 'Noise',
     noiseType: 'pink',
@@ -43,7 +43,7 @@ const PROCEDURAL: Sound[] = [
   },
   {
     id: 'noise-brown',
-    name: 'Brown noise',
+    name: 'Brown',
     kind: 'noise',
     category: 'Noise',
     noiseType: 'brown',
