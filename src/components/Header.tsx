@@ -43,7 +43,7 @@ function IconButton({
       <span className="grid h-9 w-9 shrink-0 place-items-center">
         <Icon className="h-[18px] w-[18px]" strokeWidth={1.5} />
       </span>
-      <span className="max-w-0 overflow-hidden whitespace-nowrap text-[14px] opacity-0 transition-all duration-200 ease-[var(--ease-out)] group-hover:max-w-[8rem] group-hover:pr-3.5 group-hover:opacity-100">
+      <span className="max-w-0 overflow-hidden whitespace-nowrap text-[14px] opacity-0 transition-all duration-500 ease-[var(--ease-out)] group-hover:max-w-[8rem] group-hover:pr-3.5 group-hover:opacity-100">
         {label}
       </span>
     </button>
