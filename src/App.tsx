@@ -6,6 +6,7 @@
  */
 import { useEffect } from 'react'
 import { AuthPanel } from './components/AuthPanel'
+import { CategoryBar } from './components/CategoryBar'
 import { ControlBar } from './components/ControlBar'
 import { CustomizePanel } from './components/CustomizePanel'
 import { FocusMode } from './components/FocusMode'
@@ -24,6 +25,7 @@ export function App() {
   useKeyboard()
   const focusMode = useStore((s) => s.focusMode)
   const loadTasks = useStore((s) => s.loadTasks)
+  const loadCategories = useStore((s) => s.loadCategories)
   const authOpen = useUI((s) => s.authOpen)
   const historyOpen = useUI((s) => s.historyOpen)
   const customizeOpen = useUI((s) => s.customizeOpen)
@@ -36,10 +38,11 @@ export function App() {
     initAuth()
   }, [initAuth])
 
-  // Load tasks initially and reload when auth changes (local ↔ remote).
+  // Load tasks + categories initially and reload when auth changes (local ↔ remote).
   useEffect(() => {
     void loadTasks()
-  }, [loadTasks, userId, authStatus])
+    void loadCategories()
+  }, [loadTasks, loadCategories, userId, authStatus])
 
   return (
     <div className="min-h-dvh">

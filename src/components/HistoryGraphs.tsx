@@ -1,21 +1,31 @@
 /*
- * Monochrome focus-activity graphs for the history view — think a GitHub
- * contribution graph, but for focus time, and strictly grayscale.
+ * The focus-analytics dashboard for the History view — strictly monochrome,
+ * intensity carried by `color-mix(... var(--ink) …)` so everything tracks the
+ * theme without a hint of hue. Four panels:
  *
- *  1. Heatmap — one square per day over the last ~18 weeks; darker = more focus.
- *  2. Bars    — focus minutes per day over the last 14 days.
+ *  1. Year heatmap  — one square per day across the last 53 weeks (GitHub-style),
+ *                     with month + weekday labels.
+ *  2. Focus chart   — bars over a selectable range: Week / Month / Year.
+ *  3. Rhythm        — share of focus by part of day (morning…night).
+ *  4. Weekday       — which days of the week you focus most.
  *
- * Intensity is rendered with `color-mix(... var(--ink) …)` so it tracks the
- * theme (off-white ink on dark, near-black ink on light) without any color.
- * Pure CSS/SVG-free; only focus sessions count toward the totals.
+ * Only focus sessions count toward the totals.
  */
-import { useMemo } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { motion } from 'framer-motion'
 import { dayKey, formatDuration } from '../lib/time'
 import { softSpring, spring } from '../lib/motion'
+import {
+  byTimeOfDay,
+  byWeekday,
+  dailyBars,
+  focusByDay,
+  monthlyBars,
+  type Bar,
+} from '../lib/analytics'
 import type { SessionRecord } from '../lib/history'
 
-const WEEKS = 18
+const WEEKS = 53 // a full year
 
 /** Map daily focus minutes to one of five grayscale levels (0 = none). */
 function level(minutes: number): number {
@@ -34,82 +44,109 @@ const LEVEL_BG = [
   'color-mix(in srgb, var(--ink) 90%, transparent)',
 ]
 
-/** Sum focus minutes per local day. */
-function focusByDay(sessions: SessionRecord[]): Map<string, number> {
-  const map = new Map<string, number>()
-  for (const s of sessions) {
-    if (s.session_type !== 'focus') continue
-    const k = dayKey(s.started_at)
-    map.set(k, (map.get(k) ?? 0) + (s.duration_minutes || 0))
-  }
-  return map
-}
-
 function addDays(base: Date, n: number): Date {
   return new Date(base.getFullYear(), base.getMonth(), base.getDate() + n)
 }
 
+type Range = 'week' | 'month' | 'year'
+
 export function HistoryGraphs({ sessions }: { sessions: SessionRecord[] }) {
   const byDay = useMemo(() => focusByDay(sessions), [sessions])
+  const [range, setRange] = useState<Range>('week')
 
-  // ── Heatmap grid: columns = weeks (Mon–Sun), ending with the current week ──
+  return (
+    <div className="mb-10 space-y-9">
+      <Heatmap byDay={byDay} />
+
+      <FocusChart sessions={sessions} byDay={byDay} range={range} onRange={setRange} />
+
+      <div className="grid grid-cols-2 gap-x-6 gap-y-8">
+        <Rhythm sessions={sessions} />
+        <Weekday sessions={sessions} />
+      </div>
+    </div>
+  )
+}
+
+function SectionTitle({ children }: { children: React.ReactNode }) {
+  return (
+    <h2 className="mb-3 text-[13px] font-medium uppercase tracking-[0.14em] text-tertiary">
+      {children}
+    </h2>
+  )
+}
+
+// ── 1. Year heatmap ──────────────────────────────────────────────────────────
+function Heatmap({ byDay }: { byDay: Map<string, number> }) {
+  const scrollRef = useRef<HTMLDivElement>(null)
+
   const { columns, todayKey } = useMemo(() => {
     const today = new Date()
     today.setHours(0, 0, 0, 0)
-    const mondayOffset = (today.getDay() + 6) % 7 // Mon = 0 … Sun = 6
+    const mondayOffset = (today.getDay() + 6) % 7
     const thisMonday = addDays(today, -mondayOffset)
     const gridStart = addDays(thisMonday, -(WEEKS - 1) * 7)
 
-    const cols: { key: string; minutes: number; future: boolean }[][] = []
+    let prevMonth = -1
+    const cols = []
     for (let w = 0; w < WEEKS; w++) {
-      const col: { key: string; minutes: number; future: boolean }[] = []
+      const monday = addDays(gridStart, w * 7)
+      const monthLabel =
+        monday.getMonth() !== prevMonth
+          ? monday.toLocaleDateString(undefined, { month: 'short' })
+          : ''
+      prevMonth = monday.getMonth()
+
+      const cells = []
       for (let d = 0; d < 7; d++) {
         const date = addDays(gridStart, w * 7 + d)
         const key = dayKey(date.toISOString())
-        col.push({ key, minutes: byDay.get(key) ?? 0, future: date.getTime() > today.getTime() })
+        cells.push({ key, minutes: byDay.get(key) ?? 0, future: date.getTime() > today.getTime() })
       }
-      cols.push(col)
+      cols.push({ monthLabel, cells })
     }
     return { columns: cols, todayKey: dayKey(today.toISOString()) }
   }, [byDay])
 
-  // ── Recent 14-day bars ──
-  const bars = useMemo(() => {
-    const today = new Date()
-    today.setHours(0, 0, 0, 0)
-    const out: { key: string; label: string; minutes: number; isToday: boolean }[] = []
-    for (let i = 13; i >= 0; i--) {
-      const date = addDays(today, -i)
-      const key = dayKey(date.toISOString())
-      out.push({
-        key,
-        label: date.toLocaleDateString(undefined, { weekday: 'narrow' }),
-        minutes: byDay.get(key) ?? 0,
-        isToday: i === 0,
-      })
-    }
-    return out
-  }, [byDay])
-
-  const barMax = Math.max(60, ...bars.map((b) => b.minutes)) // floor so a single 25m bar isn't full-height
+  // Land on the most recent weeks (today) rather than a year ago.
+  useEffect(() => {
+    const el = scrollRef.current
+    if (el) el.scrollLeft = el.scrollWidth
+  }, [columns])
 
   return (
-    <div className="mb-10 space-y-8">
-      {/* Heatmap */}
-      <div>
-        <h2 className="mb-3 text-[13px] font-medium uppercase tracking-[0.14em] text-tertiary">
-          Activity
-        </h2>
-        <div className="overflow-x-auto pb-1">
+    <div>
+      <SectionTitle>Activity · past year</SectionTitle>
+      <div ref={scrollRef} className="overflow-x-auto pb-1">
+        <div className="inline-flex flex-col gap-1.5">
+          {/* Month labels */}
+          <div className="flex gap-[3px] pl-[26px]">
+            {columns.map((col, w) => (
+              <div
+                key={w}
+                className="w-3 whitespace-nowrap text-[10px] leading-none text-tertiary"
+              >
+                {col.monthLabel}
+              </div>
+            ))}
+          </div>
+          {/* Weekday labels + grid */}
           <div className="flex gap-[3px]">
+            <div className="flex w-[22px] shrink-0 flex-col gap-[3px] text-[9px] leading-3 text-tertiary">
+              {['', 'Mon', '', 'Wed', '', 'Fri', ''].map((l, i) => (
+                <span key={i} className="h-3">
+                  {l}
+                </span>
+              ))}
+            </div>
             {columns.map((col, w) => (
               <div key={w} className="flex flex-col gap-[3px]">
-                {col.map((cell, d) => (
+                {col.cells.map((cell, d) => (
                   <motion.div
                     key={cell.key}
                     initial={{ scale: 0, opacity: 0 }}
                     animate={{ scale: 1, opacity: 1 }}
-                    transition={{ ...spring, delay: (w * 7 + d) * 0.004 }}
+                    transition={{ ...spring, delay: Math.min(0.5, (w * 7 + d) * 0.0015) }}
                     title={
                       cell.future
                         ? undefined
@@ -130,42 +167,183 @@ export function HistoryGraphs({ sessions }: { sessions: SessionRecord[] }) {
             ))}
           </div>
         </div>
-        {/* Legend */}
-        <div className="mt-3 flex items-center gap-2 text-[11px] text-tertiary">
-          <span>Less</span>
-          {LEVEL_BG.map((bg, i) => (
-            <span key={i} className="h-3 w-3 rounded-[3px]" style={{ backgroundColor: bg }} />
-          ))}
-          <span>More</span>
-        </div>
+      </div>
+      {/* Legend */}
+      <div className="mt-3 flex items-center gap-2 text-[11px] text-tertiary">
+        <span>Less</span>
+        {LEVEL_BG.map((bg, i) => (
+          <span key={i} className="h-3 w-3 rounded-[3px]" style={{ backgroundColor: bg }} />
+        ))}
+        <span>More</span>
+      </div>
+    </div>
+  )
+}
+
+// ── 2. Range chart (Week / Month / Year) ─────────────────────────────────────
+const RANGES: { id: Range; label: string }[] = [
+  { id: 'week', label: 'Week' },
+  { id: 'month', label: 'Month' },
+  { id: 'year', label: 'Year' },
+]
+
+function FocusChart({
+  sessions,
+  byDay,
+  range,
+  onRange,
+}: {
+  sessions: SessionRecord[]
+  byDay: Map<string, number>
+  range: Range
+  onRange: (r: Range) => void
+}) {
+  const bars = useMemo<Bar[]>(() => {
+    if (range === 'week') return dailyBars(byDay, 7)
+    if (range === 'month') return dailyBars(byDay, 30)
+    return monthlyBars(sessions, 12)
+  }, [range, byDay, sessions])
+
+  // Axis labels: every day for a week, sparse for a month, every month for a year.
+  const ticks = useMemo(() => {
+    return bars.map((b, i) => {
+      if (range === 'week' || range === 'year') return b.label
+      // month: a day-of-month tick every 5 columns
+      if (i % 5 === 0 || i === bars.length - 1) return String(new Date(b.key + 'T00:00').getDate())
+      return ''
+    })
+  }, [bars, range])
+
+  const max = Math.max(60, ...bars.map((b) => b.minutes))
+  const total = bars.reduce((sum, b) => sum + b.minutes, 0)
+  const tight = bars.length > 14 // narrower gaps for the 30-day view
+
+  return (
+    <div>
+      <div className="mb-3 flex items-center justify-between">
+        <SectionTitle>Focus time</SectionTitle>
+        <Segmented value={range} onChange={onRange} />
       </div>
 
-      {/* 14-day bars */}
-      <div>
-        <h2 className="mb-3 text-[13px] font-medium uppercase tracking-[0.14em] text-tertiary">
-          Last 14 days
-        </h2>
-        <div className="flex h-24 items-end gap-1.5">
-          {bars.map((b, i) => (
-            <div key={b.key} className="flex flex-1 flex-col items-center gap-1.5">
+      <div className={`flex h-28 items-end ${tight ? 'gap-[3px]' : 'gap-1.5'}`}>
+        {bars.map((b, i) => (
+          <div key={b.key} className="flex flex-1 flex-col items-center gap-1.5">
+            <motion.div
+              key={`${range}-${b.key}`}
+              initial={{ scaleY: 0 }}
+              animate={{ scaleY: 1 }}
+              transition={{ ...softSpring, delay: i * (tight ? 0.012 : 0.03) }}
+              title={`${b.key} · ${b.minutes ? formatDuration(b.minutes) : 'no focus'}`}
+              className="w-full origin-bottom rounded-[3px]"
+              style={{
+                height: `${b.minutes > 0 ? Math.max(4, (b.minutes / max) * 88) : 2}px`,
+                backgroundColor:
+                  b.minutes > 0
+                    ? `color-mix(in srgb, var(--ink) ${b.current ? 92 : 58}%, transparent)`
+                    : 'var(--fill)',
+              }}
+            />
+            <span className="h-3 text-[10px] leading-3 text-tertiary">{ticks[i]}</span>
+          </div>
+        ))}
+      </div>
+      <p className="mt-3 text-[12px] text-tertiary">
+        {formatDuration(total)} focused ·{' '}
+        {range === 'week' ? 'last 7 days' : range === 'month' ? 'last 30 days' : 'last 12 months'}
+      </p>
+    </div>
+  )
+}
+
+function Segmented({ value, onChange }: { value: Range; onChange: (r: Range) => void }) {
+  return (
+    <div className="relative flex rounded-full bg-fill p-0.5 text-[12px]">
+      {RANGES.map((r) => {
+        const active = r.id === value
+        return (
+          <button
+            key={r.id}
+            onClick={() => onChange(r.id)}
+            className={`relative rounded-full px-3 py-1 transition-colors duration-200 ${
+              active ? 'text-content' : 'text-tertiary hover:text-secondary'
+            }`}
+          >
+            {active && (
+              <motion.span
+                layoutId="range-pill"
+                transition={spring}
+                className="absolute inset-0 rounded-full bg-bg shadow-[var(--shadow)]"
+              />
+            )}
+            <span className="relative z-10">{r.label}</span>
+          </button>
+        )
+      })}
+    </div>
+  )
+}
+
+// ── 3. Rhythm — share of focus by part of day ────────────────────────────────
+function Rhythm({ sessions }: { sessions: SessionRecord[] }) {
+  const slices = useMemo(() => byTimeOfDay(sessions), [sessions])
+  const max = Math.max(1, ...slices.map((s) => s.minutes))
+
+  return (
+    <div>
+      <SectionTitle>Rhythm</SectionTitle>
+      <div className="space-y-2.5">
+        {slices.map((s, i) => (
+          <div key={s.label} className="flex items-center gap-3">
+            <span className="w-16 shrink-0 text-[12px] text-secondary">{s.label}</span>
+            <div className="h-2 flex-1 overflow-hidden rounded-full bg-fill">
+              <motion.div
+                initial={{ scaleX: 0 }}
+                animate={{ scaleX: s.minutes / max }}
+                transition={{ ...softSpring, delay: 0.1 + i * 0.06 }}
+                className="h-full origin-left rounded-full"
+                style={{ backgroundColor: 'color-mix(in srgb, var(--ink) 70%, transparent)' }}
+              />
+            </div>
+            <span className="w-10 shrink-0 text-right text-[11px] tabular-nums text-tertiary">
+              {s.minutes ? formatDuration(s.minutes) : '—'}
+            </span>
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+// ── 4. Weekday distribution ──────────────────────────────────────────────────
+function Weekday({ sessions }: { sessions: SessionRecord[] }) {
+  const days = useMemo(() => byWeekday(sessions), [sessions])
+  const max = Math.max(1, ...days.map((d) => d.minutes))
+
+  return (
+    <div>
+      <SectionTitle>By weekday</SectionTitle>
+      <div className="flex h-28 items-end gap-1.5">
+        {days.map((d, i) => {
+          const strongest = d.minutes === max && d.minutes > 0
+          return (
+            <div key={d.label} className="flex flex-1 flex-col items-center gap-1.5">
               <motion.div
                 initial={{ scaleY: 0 }}
                 animate={{ scaleY: 1 }}
-                transition={{ ...softSpring, delay: i * 0.03 }}
-                title={`${b.key} · ${b.minutes ? formatDuration(b.minutes) : 'no focus'}`}
+                transition={{ ...softSpring, delay: 0.1 + i * 0.04 }}
+                title={`${d.label} · ${d.minutes ? formatDuration(d.minutes) : 'no focus'}`}
                 className="w-full origin-bottom rounded-[3px]"
                 style={{
-                  height: `${b.minutes > 0 ? Math.max(4, (b.minutes / barMax) * 80) : 2}px`,
-                  backgroundColor:
-                    b.minutes > 0
-                      ? `color-mix(in srgb, var(--ink) ${b.isToday ? 92 : 60}%, transparent)`
-                      : 'var(--fill)',
+                  height: `${d.minutes > 0 ? Math.max(4, (d.minutes / max) * 88) : 2}px`,
+                  backgroundColor: d.minutes
+                    ? `color-mix(in srgb, var(--ink) ${strongest ? 90 : 52}%, transparent)`
+                    : 'var(--fill)',
                 }}
               />
-              <span className="text-[10px] text-tertiary">{b.label}</span>
+              <span className="text-[10px] leading-3 text-tertiary">{d.label[0]}</span>
             </div>
-          ))}
-        </div>
+          )
+        })}
       </div>
     </div>
   )

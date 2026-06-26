@@ -7,8 +7,8 @@
  * elegant empty state.
  */
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import { motion } from 'framer-motion'
-import { Loader2, Trash2, X } from 'lucide-react'
+import { AnimatePresence, motion } from 'framer-motion'
+import { ChevronDown, Loader2, Trash2, X } from 'lucide-react'
 import {
   clearAllSessions,
   deleteSession,
@@ -16,7 +16,8 @@ import {
   type SessionRecord,
 } from '../lib/history'
 import { seedDemoSessions } from '../lib/seed'
-import { overlaySpring, spring } from '../lib/motion'
+import { bestDayMinutes, currentStreak, focusByDay } from '../lib/analytics'
+import { overlaySpring, softSpring, spring } from '../lib/motion'
 import { HistoryGraphs } from './HistoryGraphs'
 import { useAuth } from '../state/auth'
 import { useUI } from '../state/ui'
@@ -29,6 +30,8 @@ import {
   timeLabel,
 } from '../lib/time'
 
+const DAYS_PER_PAGE = 10
+
 export function HistoryView() {
   const close = useUI((s) => s.closeHistory)
   const openAuth = useUI((s) => s.openAuth)
@@ -38,6 +41,7 @@ export function HistoryView() {
   const [sessions, setSessions] = useState<SessionRecord[] | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [confirmClear, setConfirmClear] = useState(false)
+  const [visibleDays, setVisibleDays] = useState(DAYS_PER_PAGE)
 
   const load = useCallback(async () => {
     setError(null)
@@ -76,6 +80,7 @@ export function HistoryView() {
   const stats = useMemo(() => computeStats(sessions ?? []), [sessions])
   const groups = useMemo(() => groupByDay(sessions ?? []), [sessions])
   const hasAny = (sessions?.length ?? 0) > 0
+  const shownGroups = groups.slice(0, visibleDays)
 
   // DEV-ONLY: fill the graphs with believable history so they can be previewed
   // without running real 25-minute sessions. Remove with src/lib/seed.ts.
@@ -123,10 +128,15 @@ export function HistoryView() {
         ) : (
           <>
             {/* Stats */}
-            <div className="mb-10 grid grid-cols-3 gap-4">
+            <div className="mb-10 grid grid-cols-4 gap-3">
               <Stat value={formatDuration(stats.weekFocusMinutes)} label="This week" index={0} />
-              <Stat value={String(stats.todaySessions)} label="Today" index={1} />
-              <Stat value={String(stats.totalSessions)} label="All time" index={2} />
+              <Stat
+                value={stats.streak > 0 ? `${stats.streak}d` : '0'}
+                label="Streak"
+                index={1}
+              />
+              <Stat value={formatDuration(stats.bestDayMinutes)} label="Best day" index={2} />
+              <Stat value={String(stats.totalSessions)} label="Sessions" index={3} />
             </div>
 
             {/* Sign-in nudge for local-only history. */}
@@ -152,18 +162,38 @@ export function HistoryView() {
               <>
                 <HistoryGraphs sessions={sessions} />
 
-                {groups.map((group) => (
-                  <section key={group.key} className="mb-8">
-                    <h2 className="mb-1 text-[13px] font-medium uppercase tracking-[0.14em] text-tertiary">
-                      {group.label}
-                    </h2>
-                    <ul>
-                      {group.items.map((s) => (
-                        <Row key={s.id} session={s} onDelete={() => onDelete(s.id)} />
-                      ))}
-                    </ul>
-                  </section>
-                ))}
+                {/* Collapsible day-by-day log — scales to thousands of sessions
+                    because only expanded days render their individual rows, and
+                    days are paginated. */}
+                <div className="mb-2 flex items-baseline justify-between">
+                  <h2 className="text-[13px] font-medium uppercase tracking-[0.14em] text-tertiary">
+                    Sessions
+                  </h2>
+                  <span className="text-[12px] text-tertiary">
+                    {groups.length} {groups.length === 1 ? 'day' : 'days'}
+                  </span>
+                </div>
+                <div className="border-t border-hairline">
+                  {shownGroups.map((group, i) => (
+                    <DayGroup
+                      key={group.key}
+                      group={group}
+                      defaultOpen={i === 0}
+                      onDelete={onDelete}
+                    />
+                  ))}
+                </div>
+
+                {groups.length > visibleDays && (
+                  <div className="mt-6 flex justify-center">
+                    <button
+                      onClick={() => setVisibleDays((n) => n + DAYS_PER_PAGE)}
+                      className="rounded-full border border-hairline px-5 py-2 text-[13px] text-secondary transition-colors duration-200 hover:bg-fill hover:text-content"
+                    >
+                      Show {Math.min(DAYS_PER_PAGE, groups.length - visibleDays)} more days
+                    </button>
+                  </div>
+                )}
 
                 {/* Clear all */}
                 <div className="mt-10 flex justify-center">

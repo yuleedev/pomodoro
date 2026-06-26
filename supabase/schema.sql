@@ -97,3 +97,49 @@ create policy "Users can delete their own tasks"
   on public.tasks
   for delete
   using (auth.uid() = user_id);
+
+-- ───────────────────────────────────────────────────────────────────────────
+--  categories — optional labels for tracking focus hours by area.
+-- ───────────────────────────────────────────────────────────────────────────
+create table if not exists public.categories (
+  id         uuid primary key default gen_random_uuid(),
+  user_id    uuid not null references auth.users (id) on delete cascade,
+  name       text not null,
+  position   int not null default 0,
+  created_at timestamptz not null default now()
+);
+
+create index if not exists categories_user_position_idx
+  on public.categories (user_id, position asc);
+
+alter table public.categories enable row level security;
+
+drop policy if exists "Users can read their own categories"   on public.categories;
+drop policy if exists "Users can insert their own categories" on public.categories;
+drop policy if exists "Users can update their own categories" on public.categories;
+drop policy if exists "Users can delete their own categories" on public.categories;
+
+create policy "Users can read their own categories"
+  on public.categories
+  for select
+  using (auth.uid() = user_id);
+
+create policy "Users can insert their own categories"
+  on public.categories
+  for insert
+  with check (auth.uid() = user_id);
+
+create policy "Users can update their own categories"
+  on public.categories
+  for update
+  using (auth.uid() = user_id)
+  with check (auth.uid() = user_id);
+
+create policy "Users can delete their own categories"
+  on public.categories
+  for delete
+  using (auth.uid() = user_id);
+
+-- Attribute each focus session to a category (denormalized name; nullable).
+-- Safe to re-run.
+alter table public.pomodoro_sessions add column if not exists category text;

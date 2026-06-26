@@ -517,6 +517,13 @@ function mixDescription(get: GetFn): string | null {
   return names.length ? names.join(', ') : null
 }
 
+/** Name of the active category (for attributing focus hours), or null. */
+function activeCategoryName(get: GetFn): string | null {
+  const { activeCategoryId, categories } = get()
+  if (!activeCategoryId) return null
+  return categories.find((c) => c.id === activeCategoryId)?.name ?? null
+}
+
 /** Persist a completed focus/break session (Supabase or localStorage). */
 function logCompleted(
   type: 'focus' | 'break',
@@ -532,6 +539,8 @@ function logCompleted(
     duration_minutes: minutes,
     session_type: type,
     soundscape: mixDescription(get),
+    // Only focus sessions are attributed to a category.
+    category: type === 'focus' ? activeCategoryName(get) : null,
   })
 }
 
