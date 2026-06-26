@@ -1,15 +1,13 @@
 /*
- * Header account control + history entry point. Minimal and discreet:
- *   • a History button (always available - local or synced),
- *   • an account affordance that adapts to auth state:
- *       loading  → a quiet spinner
- *       signed out (configured) → "Sign in"
- *       signed in → an initial avatar that opens a small menu (email + sign out)
+ * Header account control, far right of the toolbar. Adapts to auth state:
+ *   loading  → a quiet spinner
+ *   signed out (configured) → "Sign in"
+ *   signed in → an initial avatar that opens a small menu (email + sign out)
  * If Supabase isn't configured, no account control is shown (history stays local).
  */
 import { useState } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
-import { BarChart3, Loader2, LogOut, User } from 'lucide-react'
+import { Loader2, LogOut, User } from 'lucide-react'
 import { useAuth } from '../state/auth'
 import { useUI } from '../state/ui'
 import { spring } from '../lib/motion'
@@ -20,20 +18,11 @@ export function AccountMenu() {
   const configured = useAuth((s) => s.configured)
   const signOut = useAuth((s) => s.signOut)
   const openAuth = useUI((s) => s.openAuth)
-  const openHistory = useUI((s) => s.openHistory)
 
   const [menuOpen, setMenuOpen] = useState(false)
 
   return (
-    <div className="flex items-center gap-1">
-      <button
-        onClick={openHistory}
-        aria-label="History"
-        className="grid h-9 w-9 place-items-center rounded-full text-secondary transition-colors duration-200 hover:bg-fill hover:text-content"
-      >
-        <BarChart3 className="h-[18px] w-[18px]" strokeWidth={1.5} />
-      </button>
-
+    <div className="ml-1 flex items-center gap-1">
       {/* Account affordance (only when sign-in is possible). */}
       {configured && status === 'loading' && (
         <div className="grid h-9 w-9 place-items-center text-tertiary" aria-label="Loading account">
