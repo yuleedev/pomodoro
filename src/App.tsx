@@ -1,8 +1,8 @@
 /*
- * App shell. Focus-first layout: the Pomodoro hero timer leads, the task list
- * sits directly beneath it (they work together), and the soundscape mixer is a
- * secondary section below a hairline. The frosted control bar is always present;
- * focus mode, sign-in, and history each take over the whole field.
+ * App shell. Focus-first layout: the Pomodoro hero timer leads and the task
+ * list sits directly beneath it (they work together). The soundscape lives in
+ * its own panel, opened from the top bar. The frosted control bar is always
+ * present; focus mode, sign-in, history, and the panels take over the field.
  */
 import { useEffect } from 'react'
 import { AuthPanel } from './components/AuthPanel'
@@ -12,8 +12,7 @@ import { CustomizePanel } from './components/CustomizePanel'
 import { FocusMode } from './components/FocusMode'
 import { Header } from './components/Header'
 import { HistoryView } from './components/HistoryView'
-import { Mixer } from './components/Mixer'
-import { SoundLibrary } from './components/SoundLibrary'
+import { SoundPanel } from './components/SoundPanel'
 import { TaskList } from './components/TaskList'
 import { TimerHero } from './components/TimerHero'
 import { useKeyboard } from './hooks/useKeyboard'
@@ -29,6 +28,7 @@ export function App() {
   const authOpen = useUI((s) => s.authOpen)
   const historyOpen = useUI((s) => s.historyOpen)
   const customizeOpen = useUI((s) => s.customizeOpen)
+  const soundOpen = useUI((s) => s.soundOpen)
   const initAuth = useAuth((s) => s.init)
   const userId = useAuth((s) => s.user?.id)
   const authStatus = useAuth((s) => s.status)
@@ -58,12 +58,6 @@ export function App() {
 
           {/* Integrated to-do list */}
           <TaskList />
-
-          {/* Secondary: ambient sound */}
-          <div className="space-y-10 border-t border-hairline pt-10">
-            <SoundLibrary />
-            <Mixer />
-          </div>
         </div>
       </div>
 
@@ -73,6 +67,7 @@ export function App() {
       {historyOpen && <HistoryView />}
       {authOpen && <AuthPanel />}
       {customizeOpen && <CustomizePanel />}
+      {soundOpen && <SoundPanel />}
     </div>
   )
 }

@@ -7,22 +7,28 @@ interface UIState {
   authOpen: boolean
   historyOpen: boolean
   customizeOpen: boolean
+  soundOpen: boolean
   openAuth: () => void
   closeAuth: () => void
   openHistory: () => void
   closeHistory: () => void
   openCustomize: () => void
   closeCustomize: () => void
+  openSound: () => void
+  closeSound: () => void
 }
 
 export const useUI = create<UIState>((set) => ({
   authOpen: false,
   historyOpen: false,
   customizeOpen: false,
+  soundOpen: false,
   openAuth: () => set({ authOpen: true }),
   closeAuth: () => set({ authOpen: false }),
   openHistory: () => set({ historyOpen: true }),
   closeHistory: () => set({ historyOpen: false }),
   openCustomize: () => set({ customizeOpen: true }),
   closeCustomize: () => set({ customizeOpen: false }),
+  openSound: () => set({ soundOpen: true }),
+  closeSound: () => set({ soundOpen: false }),
 }))

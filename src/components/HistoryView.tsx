@@ -6,9 +6,9 @@
  * or clear everything with a clear confirmation. Monochrome throughout, with an
  * elegant empty state.
  */
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
-import { ChevronDown, Loader2, Trash2, X } from 'lucide-react'
+import { ChevronDown, ChevronLeft, ChevronRight, Loader2, Trash2, X } from 'lucide-react'
 import {
   clearAllSessions,
   deleteSession,
@@ -34,7 +34,8 @@ export function HistoryView() {
   const [sessions, setSessions] = useState<SessionRecord[] | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [confirmClear, setConfirmClear] = useState(false)
-  const [visibleDays, setVisibleDays] = useState(DAYS_PER_PAGE)
+  const [page, setPage] = useState(1)
+  const sessionsRef = useRef<HTMLDivElement>(null)
 
   const load = useCallback(async () => {
     setError(null)
@@ -73,7 +74,15 @@ export function HistoryView() {
   const stats = useMemo(() => computeStats(sessions ?? []), [sessions])
   const groups = useMemo(() => groupByDay(sessions ?? []), [sessions])
   const hasAny = (sessions?.length ?? 0) > 0
-  const shownGroups = groups.slice(0, visibleDays)
+  const totalPages = Math.max(1, Math.ceil(groups.length / DAYS_PER_PAGE))
+  // Clamp in case deletes shrank the list while on a later page.
+  const safePage = Math.min(page, totalPages)
+  const shownGroups = groups.slice((safePage - 1) * DAYS_PER_PAGE, safePage * DAYS_PER_PAGE)
+
+  const goToPage = (n: number) => {
+    setPage(Math.max(1, Math.min(n, totalPages)))
+    sessionsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+  }
 
   // DEV-ONLY: fill the graphs with believable history so they can be previewed
   // without running real 25-minute sessions. Remove with src/lib/seed.ts.
@@ -157,10 +166,9 @@ export function HistoryView() {
 
                 <CategoryBreakdown sessions={sessions} />
 
-                {/* Collapsible day-by-day log - scales to thousands of sessions
-                    because only expanded days render their individual rows, and
-                    days are paginated. */}
-                <div className="mb-2 flex items-baseline justify-between">
+                {/* Collapsible day-by-day log — each day expands to its sessions.
+                    Paginated by day (10 per page) with numbered pages below. */}
+                <div ref={sessionsRef} className="mb-2 flex items-baseline justify-between scroll-mt-20">
                   <h2 className="text-[13px] font-medium uppercase tracking-[0.14em] text-tertiary">
                     Sessions
                   </h2>
@@ -179,16 +187,7 @@ export function HistoryView() {
                   ))}
                 </div>
 
-                {groups.length > visibleDays && (
-                  <div className="mt-6 flex justify-center">
-                    <button
-                      onClick={() => setVisibleDays((n) => n + DAYS_PER_PAGE)}
-                      className="rounded-full border border-hairline px-5 py-2 text-[13px] text-secondary transition-colors duration-200 hover:bg-fill hover:text-content"
-                    >
-                      Show {Math.min(DAYS_PER_PAGE, groups.length - visibleDays)} more days
-                    </button>
-                  </div>
-                )}
+                <Pagination page={safePage} totalPages={totalPages} onChange={goToPage} />
 
                 {/* Clear all */}
                 <div className="mt-10 flex justify-center">
@@ -342,6 +341,97 @@ function Row({ session, onDelete }: { session: SessionRecord; onDelete: () => vo
       )}
     </li>
   )
+}
+
+/* Numbered pagination for the day log: ‹ 1 … 4 5 6 … 12 › */
+function Pagination({
+  page,
+  totalPages,
+  onChange,
+}: {
+  page: number
+  totalPages: number
+  onChange: (n: number) => void
+}) {
+  if (totalPages <= 1) return null
+
+  return (
+    <nav
+      className="mt-8 flex items-center justify-center gap-1.5"
+      aria-label="History pages"
+    >
+      <PagerButton
+        onClick={() => onChange(page - 1)}
+        disabled={page === 1}
+        label="Previous page"
+      >
+        <ChevronLeft className="h-4 w-4" strokeWidth={1.5} />
+      </PagerButton>
+
+      {pageList(page, totalPages).map((p, i) =>
+        p === '…' ? (
+          <span key={`gap-${i}`} className="px-1 text-[13px] text-tertiary">
+            …
+          </span>
+        ) : (
+          <PagerButton key={p} onClick={() => onChange(p)} active={p === page} label={`Page ${p}`}>
+            {p}
+          </PagerButton>
+        ),
+      )}
+
+      <PagerButton
+        onClick={() => onChange(page + 1)}
+        disabled={page === totalPages}
+        label="Next page"
+      >
+        <ChevronRight className="h-4 w-4" strokeWidth={1.5} />
+      </PagerButton>
+    </nav>
+  )
+}
+
+function PagerButton({
+  onClick,
+  disabled,
+  active,
+  label,
+  children,
+}: {
+  onClick: () => void
+  disabled?: boolean
+  active?: boolean
+  label: string
+  children: React.ReactNode
+}) {
+  return (
+    <button
+      onClick={onClick}
+      disabled={disabled}
+      aria-label={label}
+      aria-current={active ? 'page' : undefined}
+      className={`grid h-8 min-w-8 place-items-center rounded-full px-2 text-[13px] tabular-nums transition-all duration-200 active:scale-95 disabled:opacity-25 disabled:hover:bg-transparent ${
+        active
+          ? 'bg-ink text-ink-contrast'
+          : 'text-secondary hover:bg-fill hover:text-content'
+      }`}
+    >
+      {children}
+    </button>
+  )
+}
+
+/** First + last + a window around the current page, with … gaps. */
+function pageList(current: number, total: number): (number | '…')[] {
+  if (total <= 7) return Array.from({ length: total }, (_, i) => i + 1)
+  const out: (number | '…')[] = [1]
+  const start = Math.max(2, current - 1)
+  const end = Math.min(total - 1, current + 1)
+  if (start > 2) out.push('…')
+  for (let i = start; i <= end; i++) out.push(i)
+  if (end < total - 1) out.push('…')
+  out.push(total)
+  return out
 }
 
 function EmptyState() {
