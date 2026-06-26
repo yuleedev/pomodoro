@@ -137,7 +137,7 @@ export function TaskList() {
 
       {tasks.length === 0 ? (
         <p className="px-1 text-[15px] leading-relaxed text-tertiary">
-          No tasks yet. Add one above, then select it to focus your next session on it.
+          No tasks yet. Add one above. Your top task is automatically the focus of your next session.
         </p>
       ) : (
         <Reorder.Group axis="y" values={tasks} onReorder={reorderTasks} className="select-none">
