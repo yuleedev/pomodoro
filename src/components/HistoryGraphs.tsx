@@ -70,7 +70,7 @@ export function HistoryGraphs({ sessions }: { sessions: SessionRecord[] }) {
 
 function SectionTitle({ children }: { children: React.ReactNode }) {
   return (
-    <h2 className="mb-3 text-[13px] font-medium uppercase tracking-[0.14em] text-tertiary">
+    <h2 className="mb-3 text-[14px] font-medium uppercase tracking-[0.14em] text-tertiary">
       {children}
     </h2>
   )
@@ -124,7 +124,7 @@ function Heatmap({ byDay }: { byDay: Map<string, number> }) {
             {columns.map((col, w) => (
               <div
                 key={w}
-                className="w-3 whitespace-nowrap text-[10px] leading-none text-tertiary"
+                className="w-3 whitespace-nowrap text-[11px] leading-none text-tertiary"
               >
                 {col.monthLabel}
               </div>
@@ -132,7 +132,7 @@ function Heatmap({ byDay }: { byDay: Map<string, number> }) {
           </div>
           {/* Weekday labels + grid */}
           <div className="flex gap-[3px]">
-            <div className="flex w-[22px] shrink-0 flex-col gap-[3px] text-[9px] leading-3 text-tertiary">
+            <div className="flex w-[22px] shrink-0 flex-col gap-[3px] text-[10px] leading-3 text-tertiary">
               {['', 'Mon', '', 'Wed', '', 'Fri', ''].map((l, i) => (
                 <span key={i} className="h-3">
                   {l}
@@ -169,7 +169,7 @@ function Heatmap({ byDay }: { byDay: Map<string, number> }) {
         </div>
       </div>
       {/* Legend */}
-      <div className="mt-3 flex items-center gap-2 text-[11px] text-tertiary">
+      <div className="mt-3 flex items-center gap-2 text-[12px] text-tertiary">
         <span>Less</span>
         {LEVEL_BG.map((bg, i) => (
           <span key={i} className="h-3 w-3 rounded-[3px]" style={{ backgroundColor: bg }} />
@@ -243,11 +243,11 @@ function FocusChart({
                     : 'var(--fill)',
               }}
             />
-            <span className="h-3 text-[10px] leading-3 text-tertiary">{ticks[i]}</span>
+            <span className="h-3 text-[11px] leading-3 text-tertiary">{ticks[i]}</span>
           </div>
         ))}
       </div>
-      <p className="mt-3 text-[12px] text-tertiary">
+      <p className="mt-3 text-[13px] text-tertiary">
         {formatDuration(total)} focused ·{' '}
         {range === 'week' ? 'last 7 days' : range === 'month' ? 'last 30 days' : 'last 12 months'}
       </p>
@@ -257,7 +257,7 @@ function FocusChart({
 
 function Segmented({ value, onChange }: { value: Range; onChange: (r: Range) => void }) {
   return (
-    <div className="relative flex rounded-full bg-fill p-0.5 text-[12px]">
+    <div className="relative flex rounded-full bg-fill p-0.5 text-[13px]">
       {RANGES.map((r) => {
         const active = r.id === value
         return (
@@ -294,7 +294,7 @@ function Rhythm({ sessions }: { sessions: SessionRecord[] }) {
       <div className="space-y-2.5">
         {slices.map((s, i) => (
           <div key={s.label} className="flex items-center gap-3">
-            <span className="w-16 shrink-0 text-[12px] text-secondary">{s.label}</span>
+            <span className="w-16 shrink-0 text-[13px] text-secondary">{s.label}</span>
             <div className="h-2 flex-1 overflow-hidden rounded-full bg-fill">
               <motion.div
                 initial={{ scaleX: 0 }}
@@ -304,7 +304,7 @@ function Rhythm({ sessions }: { sessions: SessionRecord[] }) {
                 style={{ backgroundColor: 'color-mix(in srgb, var(--ink) 70%, transparent)' }}
               />
             </div>
-            <span className="w-10 shrink-0 text-right text-[11px] tabular-nums text-tertiary">
+            <span className="w-10 shrink-0 text-right text-[12px] tabular-nums text-tertiary">
               {s.minutes ? formatDuration(s.minutes) : '·'}
             </span>
           </div>
@@ -340,7 +340,7 @@ function Weekday({ sessions }: { sessions: SessionRecord[] }) {
                     : 'var(--fill)',
                 }}
               />
-              <span className="text-[10px] leading-3 text-tertiary">{d.label[0]}</span>
+              <span className="text-[11px] leading-3 text-tertiary">{d.label[0]}</span>
             </div>
           )
         })}

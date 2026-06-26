@@ -8,9 +8,11 @@
  * If Supabase isn't configured, no account control is shown (history stays local).
  */
 import { useState } from 'react'
+import { AnimatePresence, motion } from 'framer-motion'
 import { Clock, Loader2, LogOut, User } from 'lucide-react'
 import { useAuth } from '../state/auth'
 import { useUI } from '../state/ui'
+import { spring } from '../lib/motion'
 
 export function AccountMenu() {
   const status = useAuth((s) => s.status)
@@ -42,7 +44,7 @@ export function AccountMenu() {
       {configured && status === 'signed_out' && (
         <button
           onClick={openAuth}
-          className="rounded-full border border-hairline px-3.5 py-1.5 text-[14px] text-secondary transition-colors duration-200 hover:bg-fill hover:text-content"
+          className="rounded-full border border-hairline px-3.5 py-1.5 text-[15px] text-secondary transition-colors duration-200 hover:bg-fill hover:text-content"
         >
           Sign in
         </button>
@@ -54,23 +56,31 @@ export function AccountMenu() {
             onClick={() => setMenuOpen((v) => !v)}
             aria-label="Account"
             aria-expanded={menuOpen}
-            className="grid h-9 w-9 place-items-center rounded-full bg-ink text-[14px] font-medium uppercase text-ink-contrast transition-transform duration-200 hover:scale-105 active:scale-95"
+            className="grid h-9 w-9 place-items-center rounded-full bg-ink text-[15px] font-medium uppercase text-ink-contrast transition-transform duration-200 hover:scale-105 active:scale-95"
           >
             {initial(user.email)}
           </button>
 
+          <AnimatePresence>
           {menuOpen && (
             <>
               {/* Click-away catcher. */}
               <div className="fixed inset-0 z-40" onClick={() => setMenuOpen(false)} />
-              <div className="glass animate-fade-in absolute right-0 top-11 z-50 w-60 rounded-[var(--radius-lg)] p-2 shadow-[var(--shadow)]">
+              <motion.div
+                initial={{ opacity: 0, y: -6, scale: 0.96 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, y: -6, scale: 0.96, transition: { duration: 0.12 } }}
+                transition={spring}
+                style={{ transformOrigin: 'top right' }}
+                className="glass absolute right-0 top-11 z-50 w-60 rounded-[var(--radius-lg)] p-2 shadow-[var(--shadow)]"
+              >
                 <div className="flex items-center gap-3 px-3 py-2.5">
                   <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-fill text-content">
                     <User className="h-4 w-4" strokeWidth={1.5} />
                   </span>
                   <div className="min-w-0">
-                    <p className="text-[12px] uppercase tracking-[0.1em] text-tertiary">Signed in</p>
-                    <p className="truncate text-[14px] text-content">{user.email}</p>
+                    <p className="text-[13px] uppercase tracking-[0.1em] text-tertiary">Signed in</p>
+                    <p className="truncate text-[15px] text-content">{user.email}</p>
                   </div>
                 </div>
                 <div className="my-1 h-px bg-hairline" />
@@ -79,14 +89,15 @@ export function AccountMenu() {
                     setMenuOpen(false)
                     void signOut()
                   }}
-                  className="flex w-full items-center gap-3 rounded-[var(--radius-lg)] px-3 py-2.5 text-left text-[14px] text-secondary transition-colors duration-200 hover:bg-fill hover:text-content"
+                  className="flex w-full items-center gap-3 rounded-[var(--radius-lg)] px-3 py-2.5 text-left text-[15px] text-secondary transition-colors duration-200 hover:bg-fill hover:text-content"
                 >
                   <LogOut className="h-4 w-4" strokeWidth={1.5} />
                   Sign out
                 </button>
-              </div>
+              </motion.div>
             </>
           )}
+          </AnimatePresence>
         </div>
       )}
     </div>

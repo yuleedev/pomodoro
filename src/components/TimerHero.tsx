@@ -6,9 +6,11 @@
  * below; when idle, compact duration steppers appear. Strictly monochrome.
  */
 import { useState } from 'react'
+import { motion } from 'framer-motion'
 import { Maximize2, Minus, Pause, Play, Plus, RotateCcw } from 'lucide-react'
 import { useStore } from '../state/store'
 import { formatClock } from '../lib/time'
+import { spring, tapScale } from '../lib/motion'
 import { TimerRing } from './TimerRing'
 
 export function TimerHero() {
@@ -46,7 +48,7 @@ export function TimerHero() {
 
   return (
     <section className="flex flex-col items-center pt-2">
-      <p className="mb-6 text-[13px] uppercase tracking-[0.32em] text-tertiary">{phaseLabel}</p>
+      <p className="mb-6 text-[14px] uppercase tracking-[0.32em] text-tertiary">{phaseLabel}</p>
 
       {/* Ring + numerals */}
       <div className="relative aspect-square w-full max-w-[320px]">
@@ -56,11 +58,11 @@ export function TimerHero() {
         <div className="absolute inset-0 flex flex-col items-center justify-center px-8 text-center">
           <span
             className="font-light tabular-nums leading-none text-content"
-            style={{ fontSize: 'clamp(48px, 17vw, 80px)', letterSpacing: '-0.03em' }}
+            style={{ fontSize: 'clamp(54px, 18vw, 88px)', letterSpacing: '-0.03em' }}
           >
             {formatClock(shownSec)}
           </span>
-          <span className="mt-3 max-w-full truncate text-[13px] text-secondary">
+          <span className="mt-3 max-w-full truncate text-[14px] text-secondary">
             {activeTask ? activeTask.title : <span className="text-tertiary">No task selected</span>}
           </span>
         </div>
@@ -70,10 +72,12 @@ export function TimerHero() {
       {!stopwatch && timer.sessions > 1 && (
         <div className="mt-6 flex items-center gap-2">
           {Array.from({ length: timer.sessions }).map((_, i) => (
-            <span
+            <motion.span
               key={i}
-              className="h-1.5 w-1.5 rounded-full transition-colors duration-300"
+              className="h-1.5 w-1.5 rounded-full"
               style={{ backgroundColor: i < completed ? 'var(--accent)' : 'var(--fill-strong)' }}
+              animate={{ scale: i < completed ? [1, 1.5, 1] : 1 }}
+              transition={spring}
             />
           ))}
         </div>
@@ -85,17 +89,20 @@ export function TimerHero() {
           <RotateCcw className="h-5 w-5" strokeWidth={1.5} />
         </GhostBtn>
 
-        <button
+        <motion.button
           onClick={running ? pauseTimer : startTimer}
           aria-label={running ? 'Pause timer' : 'Start timer'}
-          className="grid h-20 w-20 place-items-center rounded-full bg-ink text-ink-contrast shadow-[var(--shadow)] transition-all duration-300 ease-[var(--ease-out)] hover:scale-[1.04] active:scale-95"
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.9 }}
+          transition={spring}
+          className="grid h-20 w-20 place-items-center rounded-full bg-ink text-ink-contrast shadow-[var(--shadow)]"
         >
           {running ? (
             <Pause className="h-8 w-8" strokeWidth={1.5} fill="currentColor" />
           ) : (
             <Play className="h-8 w-8 translate-x-[2px]" strokeWidth={1.5} fill="currentColor" />
           )}
-        </button>
+        </motion.button>
 
         <GhostBtn onClick={enterFocus} label="Enter focus mode">
           <Maximize2 className="h-5 w-5" strokeWidth={1.5} />
@@ -110,7 +117,7 @@ export function TimerHero() {
               key={m}
               onClick={() => setTimerMode(m)}
               aria-pressed={mode === m}
-              className={`rounded-full px-4 py-1.5 text-[12px] capitalize tracking-wide transition-colors duration-200 ${
+              className={`rounded-full px-4 py-1.5 text-[13px] capitalize tracking-wide transition-colors duration-200 ${
                 mode === m
                   ? 'bg-ink text-ink-contrast'
                   : 'text-secondary hover:text-content'
@@ -168,13 +175,15 @@ function GhostBtn({
   children: React.ReactNode
 }) {
   return (
-    <button
+    <motion.button
       onClick={onClick}
       aria-label={label}
-      className="grid h-12 w-12 place-items-center rounded-full text-secondary transition-all duration-200 ease-[var(--ease-out)] hover:bg-fill hover:text-content active:scale-95"
+      whileTap={tapScale}
+      transition={spring}
+      className="grid h-12 w-12 place-items-center rounded-full text-secondary transition-colors duration-200 hover:bg-fill hover:text-content"
     >
       {children}
-    </button>
+    </motion.button>
   )
 }
 
@@ -207,7 +216,7 @@ function Stepper({
 
   return (
     <div className="flex flex-col items-center gap-2">
-      <span className="text-[11px] uppercase tracking-[0.1em] text-tertiary">{label}</span>
+      <span className="text-[12px] uppercase tracking-[0.1em] text-tertiary">{label}</span>
       <div className="flex items-center gap-2">
         <button
           onClick={() => onChange(Math.max(min, value - step))}
@@ -217,7 +226,7 @@ function Stepper({
         >
           <Minus className="h-3.5 w-3.5" strokeWidth={2} />
         </button>
-        <span className="flex w-11 items-baseline justify-center text-[20px] font-medium tabular-nums text-content">
+        <span className="flex w-11 items-baseline justify-center text-[22px] font-medium tabular-nums text-content">
           <input
             type="text"
             inputMode="numeric"
@@ -231,7 +240,7 @@ function Stepper({
             }}
             className="w-7 bg-transparent text-right tabular-nums text-content outline-none focus:text-accent"
           />
-          <span className="ml-0.5 text-[11px] text-tertiary">{unit}</span>
+          <span className="ml-0.5 text-[12px] text-tertiary">{unit}</span>
         </span>
         <button
           onClick={() => onChange(Math.min(max, value + step))}

@@ -12,6 +12,7 @@ import { CustomizePanel } from './components/CustomizePanel'
 import { FocusMode } from './components/FocusMode'
 import { Header } from './components/Header'
 import { HistoryView } from './components/HistoryView'
+import { Reveal } from './components/Reveal'
 import { SoundPanel } from './components/SoundPanel'
 import { TaskList } from './components/TaskList'
 import { TimerHero } from './components/TimerHero'
@@ -47,17 +48,21 @@ export function App() {
   return (
     <div className="min-h-dvh">
       <div className="mx-auto w-full max-w-xl px-5 pb-40">
-        <Header />
+        <Reveal>
+          <Header />
+        </Reveal>
 
         <div className="space-y-12 pt-2">
           {/* Centerpiece + optional category attribution */}
-          <div className="space-y-6">
+          <Reveal delay={0.06} className="space-y-6">
             <TimerHero />
             <CategoryBar />
-          </div>
+          </Reveal>
 
           {/* Integrated to-do list */}
-          <TaskList />
+          <Reveal delay={0.14}>
+            <TaskList />
+          </Reveal>
         </div>
       </div>
 

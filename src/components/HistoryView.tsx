@@ -101,13 +101,13 @@ export function HistoryView() {
       >
         {/* Header */}
         <header className="sticky top-0 z-10 -mx-5 flex items-center justify-between bg-bg/80 px-5 py-6 backdrop-blur">
-          <h1 className="text-[24px] font-medium tracking-tight text-content">History</h1>
+          <h1 className="text-[26px] font-medium tracking-tight text-content">History</h1>
           <div className="flex items-center gap-2">
             {/* DEV-ONLY preview helper - remove with src/lib/seed.ts */}
             {import.meta.env.DEV && (
               <button
                 onClick={onSeedDemo}
-                className="rounded-full border border-hairline px-3 py-1.5 text-[12px] text-tertiary transition-colors duration-200 hover:bg-fill hover:text-content"
+                className="rounded-full border border-hairline px-3 py-1.5 text-[13px] text-tertiary transition-colors duration-200 hover:bg-fill hover:text-content"
               >
                 Load demo data
               </button>
@@ -145,7 +145,7 @@ export function HistoryView() {
             {configured && authStatus === 'signed_out' && hasAny && (
               <button
                 onClick={openAuth}
-                className="mb-8 w-full rounded-[var(--radius-lg)] border border-hairline px-4 py-3 text-left text-[14px] text-secondary transition-colors duration-200 hover:bg-fill hover:text-content"
+                className="mb-8 w-full rounded-[var(--radius-lg)] border border-hairline px-4 py-3 text-left text-[15px] text-secondary transition-colors duration-200 hover:bg-fill hover:text-content"
               >
                 These sessions are saved on this device.{' '}
                 <span className="text-content underline underline-offset-4">Sign in</span> to sync
@@ -154,7 +154,7 @@ export function HistoryView() {
             )}
 
             {error && (
-              <p className="mb-6 text-[14px] leading-relaxed text-secondary">{error}</p>
+              <p className="mb-6 text-[15px] leading-relaxed text-secondary">{error}</p>
             )}
 
             {/* List or empty state */}
@@ -169,10 +169,10 @@ export function HistoryView() {
                 {/* Collapsible day-by-day log — each day expands to its sessions.
                     Paginated by day (10 per page) with numbered pages below. */}
                 <div ref={sessionsRef} className="mb-2 flex items-baseline justify-between scroll-mt-20">
-                  <h2 className="text-[13px] font-medium uppercase tracking-[0.14em] text-tertiary">
+                  <h2 className="text-[14px] font-medium uppercase tracking-[0.14em] text-tertiary">
                     Sessions
                   </h2>
-                  <span className="text-[12px] text-tertiary">
+                  <span className="text-[13px] text-tertiary">
                     {groups.length} {groups.length === 1 ? 'day' : 'days'}
                   </span>
                 </div>
@@ -192,7 +192,7 @@ export function HistoryView() {
                 {/* Clear all */}
                 <div className="mt-10 flex justify-center">
                   {confirmClear ? (
-                    <div className="flex items-center gap-3 text-[14px]">
+                    <div className="flex items-center gap-3 text-[15px]">
                       <span className="text-secondary">Delete all history?</span>
                       <button
                         onClick={onClearAll}
@@ -210,7 +210,7 @@ export function HistoryView() {
                   ) : (
                     <button
                       onClick={() => setConfirmClear(true)}
-                      className="text-[14px] text-tertiary underline-offset-4 transition-colors hover:text-content hover:underline"
+                      className="text-[15px] text-tertiary underline-offset-4 transition-colors hover:text-content hover:underline"
                     >
                       Clear all history
                     </button>
@@ -233,10 +233,10 @@ function Stat({ value, label, index = 0 }: { value: string; label: string; index
       animate={{ opacity: 1, y: 0, scale: 1 }}
       transition={{ ...spring, delay: 0.05 + index * 0.06 }}
     >
-      <span className="text-[25px] font-light leading-none tracking-tight tabular-nums text-content">
+      <span className="text-[27px] font-light leading-none tracking-tight tabular-nums text-content">
         {value}
       </span>
-      <span className="mt-1.5 text-[11px] uppercase tracking-[0.08em] text-tertiary">{label}</span>
+      <span className="mt-1.5 text-[12px] uppercase tracking-[0.08em] text-tertiary">{label}</span>
     </motion.div>
   )
 }
@@ -265,8 +265,8 @@ function DayGroup({
           }`}
           strokeWidth={1.5}
         />
-        <span className="flex-1 text-[15px] text-content">{group.label}</span>
-        <span className="text-[13px] tabular-nums text-tertiary">
+        <span className="flex-1 text-[16px] text-content">{group.label}</span>
+        <span className="text-[14px] tabular-nums text-tertiary">
           {group.items.length} {group.items.length === 1 ? 'session' : 'sessions'}
           {group.focusMinutes > 0 && (
             <span className="text-secondary"> · {formatDuration(group.focusMinutes)}</span>
@@ -300,22 +300,22 @@ function Row({ session, onDelete }: { session: SessionRecord; onDelete: () => vo
   const [confirm, setConfirm] = useState(false)
   return (
     <li className="group flex items-center gap-3 border-b border-hairline py-3.5 last:border-b-0">
-      <span className="w-16 shrink-0 text-[14px] tabular-nums text-secondary">
+      <span className="w-16 shrink-0 text-[15px] tabular-nums text-secondary">
         {timeLabel(session.started_at)}
       </span>
       <div className="min-w-0 flex-1">
-        <span className="text-[15px] text-content">
+        <span className="text-[16px] text-content">
           {session.session_type === 'break' ? 'Break' : 'Focus'}
           <span className="text-tertiary"> · {formatDuration(session.duration_minutes)}</span>
           {session.category && <span className="text-tertiary"> · {session.category}</span>}
         </span>
         {session.soundscape && (
-          <p className="truncate text-[13px] text-tertiary">{session.soundscape}</p>
+          <p className="truncate text-[14px] text-tertiary">{session.soundscape}</p>
         )}
       </div>
 
       {confirm ? (
-        <div className="flex items-center gap-2 text-[13px]">
+        <div className="flex items-center gap-2 text-[14px]">
           <button
             onClick={onDelete}
             className="rounded-full bg-ink px-3 py-1 font-medium text-ink-contrast transition-opacity hover:opacity-90"
@@ -370,7 +370,7 @@ function Pagination({
 
       {pageList(page, totalPages).map((p, i) =>
         p === '…' ? (
-          <span key={`gap-${i}`} className="px-1 text-[13px] text-tertiary">
+          <span key={`gap-${i}`} className="px-1 text-[14px] text-tertiary">
             …
           </span>
         ) : (
@@ -410,7 +410,7 @@ function PagerButton({
       disabled={disabled}
       aria-label={label}
       aria-current={active ? 'page' : undefined}
-      className={`grid h-8 min-w-8 place-items-center rounded-full px-2 text-[13px] tabular-nums transition-all duration-200 active:scale-95 disabled:opacity-25 disabled:hover:bg-transparent ${
+      className={`grid h-8 min-w-8 place-items-center rounded-full px-2 text-[14px] tabular-nums transition-all duration-200 active:scale-95 disabled:opacity-25 disabled:hover:bg-transparent ${
         active
           ? 'bg-ink text-ink-contrast'
           : 'text-secondary hover:bg-fill hover:text-content'
@@ -437,8 +437,8 @@ function pageList(current: number, total: number): (number | '…')[] {
 function EmptyState() {
   return (
     <div className="grid place-items-center py-28 text-center">
-      <p className="text-[17px] text-content">No sessions yet</p>
-      <p className="mt-2 max-w-[16rem] text-[14px] leading-relaxed text-tertiary">
+      <p className="text-[18px] text-content">No sessions yet</p>
+      <p className="mt-2 max-w-[16rem] text-[15px] leading-relaxed text-tertiary">
         Finish a focus session and it’ll appear here, quietly tracked, just for you.
       </p>
     </div>
@@ -462,13 +462,13 @@ function CategoryBreakdown({ sessions }: { sessions: SessionRecord[] }) {
 
   return (
     <section className="mb-10">
-      <h2 className="mb-3 text-[13px] font-medium uppercase tracking-[0.14em] text-tertiary">
+      <h2 className="mb-3 text-[14px] font-medium uppercase tracking-[0.14em] text-tertiary">
         By category
       </h2>
       <ul className="space-y-2.5">
         {totals.map(([name, minutes]) => (
           <li key={name} className="flex items-center gap-3">
-            <span className="w-24 shrink-0 truncate text-[14px] text-content">{name}</span>
+            <span className="w-24 shrink-0 truncate text-[15px] text-content">{name}</span>
             <div className="h-2 flex-1 overflow-hidden rounded-full bg-fill">
               <div
                 className="h-full rounded-full"
@@ -478,7 +478,7 @@ function CategoryBreakdown({ sessions }: { sessions: SessionRecord[] }) {
                 }}
               />
             </div>
-            <span className="w-14 shrink-0 text-right text-[13px] tabular-nums text-secondary">
+            <span className="w-14 shrink-0 text-right text-[14px] tabular-nums text-secondary">
               {formatDuration(minutes)}
             </span>
           </li>

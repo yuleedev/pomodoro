@@ -3,8 +3,10 @@
  * Holds the sound library (tap to layer) and the mixer (balance active layers),
  * kept out of the main focus view so the timer and tasks stay front and center.
  */
+import { motion } from 'framer-motion'
 import { X } from 'lucide-react'
 import { useUI } from '../state/ui'
+import { popSpring } from '../lib/motion'
 import { SoundLibrary } from './SoundLibrary'
 import { Mixer } from './Mixer'
 
@@ -14,15 +16,22 @@ export function SoundPanel() {
   return (
     <div className="fixed inset-0 z-[60] flex items-end justify-center sm:items-center">
       {/* Backdrop */}
-      <div
+      <motion.div
         className="absolute inset-0 bg-black/40 backdrop-blur-sm"
         onClick={close}
         aria-hidden="true"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
       />
 
-      <div className="glass animate-fade-in relative m-3 flex max-h-[85dvh] w-full max-w-md flex-col rounded-[var(--radius-2xl)] p-6 shadow-[var(--shadow)]">
+      <motion.div
+        initial={{ opacity: 0, y: 24, scale: 0.96 }}
+        animate={{ opacity: 1, y: 0, scale: 1 }}
+        transition={popSpring}
+        className="glass relative m-3 flex max-h-[85dvh] w-full max-w-md flex-col rounded-[var(--radius-2xl)] p-6 shadow-[var(--shadow)]"
+      >
         <div className="mb-6 flex items-center justify-between">
-          <h2 className="text-[18px] font-medium tracking-tight text-content">Soundscape</h2>
+          <h2 className="text-[20px] font-medium tracking-tight text-content">Soundscape</h2>
           <button
             onClick={close}
             aria-label="Close"
@@ -37,7 +46,7 @@ export function SoundPanel() {
           <SoundLibrary />
           <Mixer />
         </div>
-      </div>
+      </motion.div>
     </div>
   )
 }

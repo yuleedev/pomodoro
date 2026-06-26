@@ -6,9 +6,11 @@
  * The accent flows through the timer ring, session dots, and the active-task
  * indicator via the global --accent variable.
  */
+import { motion } from 'framer-motion'
 import { Check, Moon, Plus, Sun, X } from 'lucide-react'
 import { useStore, type TimerStyle } from '../state/store'
 import { useUI } from '../state/ui'
+import { popSpring } from '../lib/motion'
 import { TimerRing } from './TimerRing'
 
 const STYLES: { key: TimerStyle; label: string }[] = [
@@ -44,15 +46,22 @@ export function CustomizePanel() {
   return (
     <div className="fixed inset-0 z-[60] flex items-end justify-center sm:items-center">
       {/* Backdrop */}
-      <div
+      <motion.div
         className="absolute inset-0 bg-black/40 backdrop-blur-sm"
         onClick={close}
         aria-hidden="true"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
       />
 
-      <div className="glass animate-fade-in relative m-3 w-full max-w-md rounded-[var(--radius-2xl)] p-6 shadow-[var(--shadow)]">
+      <motion.div
+        initial={{ opacity: 0, y: 24, scale: 0.96 }}
+        animate={{ opacity: 1, y: 0, scale: 1 }}
+        transition={popSpring}
+        className="glass relative m-3 w-full max-w-md rounded-[var(--radius-2xl)] p-6 shadow-[var(--shadow)]"
+      >
         <div className="mb-6 flex items-center justify-between">
-          <h2 className="text-[18px] font-medium tracking-tight text-content">Customize</h2>
+          <h2 className="text-[20px] font-medium tracking-tight text-content">Customize</h2>
           <button
             onClick={close}
             aria-label="Close"
@@ -96,7 +105,7 @@ export function CustomizePanel() {
                   <TimerRing fraction={0.66} style={s.key} />
                 </span>
                 <span
-                  className={`text-[11px] ${timerStyle === s.key ? 'text-content' : 'text-tertiary'}`}
+                  className={`text-[12px] ${timerStyle === s.key ? 'text-content' : 'text-tertiary'}`}
                 >
                   {s.label}
                 </span>
@@ -161,7 +170,7 @@ export function CustomizePanel() {
               />
             </label>
           </div>
-          <p className="mt-3 text-[12px] leading-relaxed text-tertiary">
+          <p className="mt-3 text-[13px] leading-relaxed text-tertiary">
             Your color tints the entire app - background, text, and controls - not
             just the ring. Tap{' '}
             <span className="inline-flex h-4 w-4 -translate-y-px items-center justify-center rounded-full border border-dashed border-hairline-strong align-middle">
@@ -170,7 +179,7 @@ export function CustomizePanel() {
             to add your own, or pick Monochrome for the original black-and-white look.
           </p>
         </Section>
-      </div>
+      </motion.div>
     </div>
   )
 }
@@ -209,7 +218,7 @@ function ThemePreview({ accent }: { accent: string | null }) {
         </div>
       </div>
 
-      <span className="shrink-0 text-[11px] tabular-nums text-tertiary">
+      <span className="shrink-0 text-[12px] tabular-nums text-tertiary">
         {accent ? accent.toUpperCase() : 'Mono'}
       </span>
     </div>
@@ -219,7 +228,7 @@ function ThemePreview({ accent }: { accent: string | null }) {
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <div className="mb-7 last:mb-0">
-      <h3 className="mb-3 text-[12px] font-medium uppercase tracking-[0.14em] text-tertiary">
+      <h3 className="mb-3 text-[13px] font-medium uppercase tracking-[0.14em] text-tertiary">
         {title}
       </h3>
       {children}
@@ -242,7 +251,7 @@ function ThemeOption({
     <button
       onClick={onClick}
       aria-pressed={active}
-      className={`flex items-center justify-center gap-2 rounded-[var(--radius-lg)] py-3 text-[14px] transition-all duration-200 active:scale-[0.98] ${
+      className={`flex items-center justify-center gap-2 rounded-[var(--radius-lg)] py-3 text-[15px] transition-all duration-200 active:scale-[0.98] ${
         active
           ? 'bg-fill text-content ring-1 ring-hairline-strong'
           : 'border border-hairline text-secondary hover:bg-fill hover:text-content'
@@ -267,12 +276,15 @@ function Swatch({
   style: React.CSSProperties
 }) {
   return (
-    <button
+    <motion.button
       onClick={onClick}
       title={title}
       aria-label={title}
       aria-pressed={selected}
-      className={`relative grid h-8 w-8 place-items-center rounded-full border border-hairline transition-transform duration-200 hover:scale-110 active:scale-95 ${
+      whileHover={{ scale: 1.12 }}
+      whileTap={{ scale: 0.9 }}
+      transition={popSpring}
+      className={`relative grid h-8 w-8 place-items-center rounded-full border border-hairline ${
         selected ? 'ring-2 ring-content ring-offset-2 ring-offset-elevated' : ''
       }`}
       style={style}
@@ -280,6 +292,6 @@ function Swatch({
       {selected && (
         <Check className="h-4 w-4 text-white mix-blend-difference" strokeWidth={2.5} />
       )}
-    </button>
+    </motion.button>
   )
 }

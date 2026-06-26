@@ -34,9 +34,9 @@ export function TaskList() {
   return (
     <section className="w-full">
       <div className="mb-4 flex items-baseline justify-between">
-        <h2 className="text-[14px] font-medium uppercase tracking-[0.14em] text-tertiary">Tasks</h2>
+        <h2 className="text-[15px] font-medium uppercase tracking-[0.14em] text-tertiary">Tasks</h2>
         {tasks.length > 0 && (
-          <span className="text-[12px] tabular-nums text-tertiary">{remaining} left</span>
+          <span className="text-[13px] tabular-nums text-tertiary">{remaining} left</span>
         )}
       </div>
 
@@ -48,14 +48,14 @@ export function TaskList() {
             value={draft}
             onChange={(e) => setDraft(e.target.value)}
             placeholder="Add a task…"
-            className="min-w-0 flex-1 bg-transparent text-[15px] text-content placeholder:text-tertiary focus:outline-none"
+            className="min-w-0 flex-1 bg-transparent text-[16px] text-content placeholder:text-tertiary focus:outline-none"
             aria-label="Add a task"
           />
         </div>
       </form>
 
       {tasks.length === 0 ? (
-        <p className="px-1 text-[14px] leading-relaxed text-tertiary">
+        <p className="px-1 text-[15px] leading-relaxed text-tertiary">
           No tasks yet. Add one above, then select it to focus your next session on it.
         </p>
       ) : (
@@ -148,14 +148,14 @@ function TaskRow({ task }: { task: Task }) {
               setEditing(false)
             }
           }}
-          className="min-w-0 flex-1 bg-transparent text-[15px] text-content focus:outline-none"
+          className="min-w-0 flex-1 bg-transparent text-[16px] text-content focus:outline-none"
           aria-label="Edit task"
         />
       ) : (
         <button
           onClick={() => selectTask(task.id)}
           onDoubleClick={() => setEditing(true)}
-          className="min-w-0 flex-1 truncate text-left text-[15px] transition-colors"
+          className="min-w-0 flex-1 truncate text-left text-[16px] transition-colors"
           title={active ? 'Active, click to deselect' : 'Click to focus on this task'}
         >
           <span
@@ -195,7 +195,7 @@ function TaskRow({ task }: { task: Task }) {
 /* Up to 5 dots; beyond that, a compact count. Pure grayscale. */
 function SessionDots({ count }: { count: number }) {
   if (count > 5) {
-    return <span className="shrink-0 text-[11px] tabular-nums text-tertiary">{count}×</span>
+    return <span className="shrink-0 text-[12px] tabular-nums text-tertiary">{count}×</span>
   }
   return (
     <span className="flex shrink-0 items-center gap-1" title={`${count} session${count > 1 ? 's' : ''}`}>

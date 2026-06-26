@@ -1,10 +1,13 @@
 /*
  * The sound library - the procedural sounds you can layer into the mix,
- * grouped by category. Tapping a tile toggles it on/off.
+ * grouped by category. Tapping a tile toggles it on/off. Tiles spring in with a
+ * subtle stagger and bounce on tap, matching the rest of the app.
  */
+import { motion } from 'framer-motion'
 import { Check, Plus } from 'lucide-react'
 import { buildCatalog, CATEGORY_ORDER, type Sound, type SoundCategory } from '../audio/catalog'
 import { useStore } from '../state/store'
+import { revealVariants, tapScale } from '../lib/motion'
 
 export function SoundLibrary() {
   const mix = useStore((s) => s.mix)
@@ -13,9 +16,11 @@ export function SoundLibrary() {
   const all = buildCatalog()
   const byCategory = (cat: SoundCategory) => all.filter((s) => s.category === cat)
 
+  let order = 0 // running index for a continuous stagger across categories
+
   return (
     <section className="w-full">
-      <h2 className="mb-4 text-[14px] font-medium uppercase tracking-[0.14em] text-tertiary">
+      <h2 className="mb-4 text-[15px] font-medium uppercase tracking-[0.14em] text-tertiary">
         Sounds
       </h2>
 
@@ -25,7 +30,7 @@ export function SoundLibrary() {
           if (items.length === 0) return null
           return (
             <div key={cat}>
-              <h3 className="mb-3 text-[13px] font-medium uppercase tracking-[0.14em] text-tertiary">
+              <h3 className="mb-3 text-[14px] font-medium uppercase tracking-[0.14em] text-tertiary">
                 {cat}
               </h3>
               <div className="flex flex-wrap gap-2.5">
@@ -35,6 +40,7 @@ export function SoundLibrary() {
                     sound={sound}
                     active={sound.id in mix}
                     onToggle={() => toggleSound(sound.id)}
+                    index={order++}
                   />
                 ))}
               </div>
@@ -50,16 +56,23 @@ function Tile({
   sound,
   active,
   onToggle,
+  index,
 }: {
   sound: Sound
   active: boolean
   onToggle: () => void
+  index: number
 }) {
   return (
-    <button
+    <motion.button
       onClick={onToggle}
       aria-pressed={active}
-      className={`group flex items-center gap-2 rounded-full px-4 py-2.5 text-[14px] transition-all duration-200 ease-[var(--ease-out)] active:scale-95 ${
+      variants={revealVariants}
+      initial="hidden"
+      animate="show"
+      custom={index}
+      whileTap={tapScale}
+      className={`group flex items-center gap-2 rounded-full px-4 py-2.5 text-[15px] ${
         active
           ? 'bg-ink text-ink-contrast shadow-[var(--shadow)]'
           : 'border border-hairline text-secondary hover:bg-fill hover:text-content'
@@ -77,6 +90,6 @@ function Tile({
         )}
       </span>
       {sound.name}
-    </button>
+    </motion.button>
   )
 }

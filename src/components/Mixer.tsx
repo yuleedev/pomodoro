@@ -3,9 +3,11 @@
  * like "rain + brown noise" can be balanced individually. Empty until the first
  * sound is added (clean empty state).
  */
+import { AnimatePresence, motion } from 'framer-motion'
 import { X } from 'lucide-react'
 import { buildCatalog, type Sound } from '../audio/catalog'
 import { useStore } from '../state/store'
+import { spring } from '../lib/motion'
 import { Slider } from './Slider'
 
 export function Mixer() {
@@ -20,22 +22,28 @@ export function Mixer() {
 
   return (
     <section className="w-full">
-      <h2 className="mb-4 text-[14px] font-medium uppercase tracking-[0.14em] text-tertiary">
+      <h2 className="mb-4 text-[15px] font-medium uppercase tracking-[0.14em] text-tertiary">
         Mix
       </h2>
 
       {active.length === 0 ? (
-        <p className="text-[14px] leading-relaxed text-tertiary">
+        <p className="text-[15px] leading-relaxed text-tertiary">
           Nothing playing yet. Pick a sound above to start your mix.
         </p>
       ) : (
         <ul className="space-y-1">
+          <AnimatePresence initial={false} mode="popLayout">
           {active.map((sound) => (
-            <li
+            <motion.li
               key={sound.id}
+              layout
+              initial={{ opacity: 0, x: -8 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: 8, transition: { duration: 0.12 } }}
+              transition={spring}
               className="group flex items-center gap-4 rounded-[var(--radius-lg)] px-3 py-3 transition-colors duration-200 hover:bg-fill"
             >
-              <span className="w-28 shrink-0 truncate text-[15px] text-content">{sound.name}</span>
+              <span className="w-28 shrink-0 truncate text-[16px] text-content">{sound.name}</span>
               <div className="flex-1">
                 <Slider
                   value={mix[sound.id]}
@@ -43,7 +51,7 @@ export function Mixer() {
                   ariaLabel={`${sound.name} volume`}
                 />
               </div>
-              <span className="w-8 shrink-0 text-right text-[13px] tabular-nums text-tertiary">
+              <span className="w-8 shrink-0 text-right text-[14px] tabular-nums text-tertiary">
                 {Math.round(mix[sound.id] * 100)}
               </span>
               <button
@@ -53,8 +61,9 @@ export function Mixer() {
               >
                 <X className="h-4 w-4" strokeWidth={1.5} />
               </button>
-            </li>
+            </motion.li>
           ))}
+          </AnimatePresence>
         </ul>
       )}
     </section>

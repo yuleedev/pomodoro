@@ -4,9 +4,11 @@
  * else. Escape or the close control returns to the main screen.
  */
 import type { ReactNode } from 'react'
+import { motion } from 'framer-motion'
 import { Pause, Play, RotateCcw, X } from 'lucide-react'
 import { useStore } from '../state/store'
 import { formatClock } from '../lib/time'
+import { popSpring, spring, tapScale } from '../lib/motion'
 
 export function FocusMode() {
   const phase = useStore((s) => s.phase)
@@ -49,18 +51,30 @@ export function FocusMode() {
       </button>
 
       {/* Phase label */}
-      <p className="mb-6 text-[14px] uppercase tracking-[0.35em] text-tertiary">{label}</p>
+      <motion.p
+        className="mb-6 text-[15px] uppercase tracking-[0.35em] text-tertiary"
+        initial={{ opacity: 0, y: 8 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ ...spring, delay: 0.05 }}
+      >
+        {label}
+      </motion.p>
 
       {/* The clock - the single focal point */}
-      <div className="select-none text-[18vw] font-light leading-none tracking-tight tabular-nums text-content sm:text-[130px]">
+      <motion.div
+        className="select-none text-[20vw] font-light leading-none tracking-tight tabular-nums text-content sm:text-[144px]"
+        initial={{ opacity: 0, scale: 0.85 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={popSpring}
+      >
         {stopwatch
           ? formatClock(isIdle ? 0 : elapsedSec)
           : formatClock(isIdle ? timer.workMinutes * 60 : remainingSec)}
-      </div>
+      </motion.div>
 
       {/* Active task */}
       {activeTask && (
-        <p className="mt-6 max-w-xs truncate px-6 text-center text-[15px] text-secondary">
+        <p className="mt-6 max-w-xs truncate px-6 text-center text-[16px] text-secondary">
           {activeTask.title}
         </p>
       )}
@@ -95,7 +109,7 @@ export function FocusMode() {
         </ControlBtn>
       </div>
 
-      <p className="absolute bottom-8 text-[13px] text-tertiary">Press Esc to exit</p>
+      <p className="absolute bottom-8 text-[14px] text-tertiary">Press Esc to exit</p>
     </div>
   )
 }
@@ -112,16 +126,19 @@ function ControlBtn({
   children: ReactNode
 }) {
   return (
-    <button
+    <motion.button
       onClick={onClick}
       aria-label={label}
-      className={`grid h-14 w-14 place-items-center rounded-full transition-all duration-200 ease-[var(--ease-out)] hover:scale-105 active:scale-95 ${
+      whileHover={{ scale: 1.06 }}
+      whileTap={tapScale}
+      transition={spring}
+      className={`grid h-14 w-14 place-items-center rounded-full ${
         primary
           ? 'bg-ink text-ink-contrast shadow-[var(--shadow)]'
           : 'border border-hairline text-secondary hover:bg-fill hover:text-content'
       }`}
     >
       {children}
-    </button>
+    </motion.button>
   )
 }
