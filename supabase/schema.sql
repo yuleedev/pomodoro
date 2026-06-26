@@ -63,8 +63,14 @@ create table if not exists public.tasks (
   completed     boolean not null default false,
   session_count int not null default 0,        -- pomodoros logged against this task
   position      int not null default 0,         -- sort order (ascending)
-  created_at    timestamptz not null default now()
+  created_at    timestamptz not null default now(),
+  recurrence    text,                            -- 'daily' = repeats each day; null = one-off
+  completed_at  timestamptz                      -- last completion (drives the daily reset)
 );
+
+-- Backfill the recurrence columns onto pre-existing task tables.
+alter table public.tasks add column if not exists recurrence   text;
+alter table public.tasks add column if not exists completed_at timestamptz;
 
 create index if not exists tasks_user_position_idx
   on public.tasks (user_id, position asc);

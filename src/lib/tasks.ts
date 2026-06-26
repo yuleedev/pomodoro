@@ -20,6 +20,10 @@ export interface Task {
   /** Sort order (ascending). */
   position: number
   created_at?: string
+  /** 'daily' = the task re-opens each new day; absent = a one-off task. */
+  recurrence?: 'daily'
+  /** ISO timestamp of the last completion - drives the daily reset. */
+  completed_at?: string
 }
 
 const isRemote = () => Boolean(getCurrentUserId() && supabase)
@@ -51,6 +55,8 @@ function toRow(t: Task) {
     completed: t.completed,
     session_count: t.session_count,
     position: t.position,
+    recurrence: t.recurrence ?? null,
+    completed_at: t.completed_at ?? null,
   }
 }
 
@@ -96,6 +102,8 @@ export async function updateTask(task: Task): Promise<void> {
         completed: task.completed,
         session_count: task.session_count,
         position: task.position,
+        recurrence: task.recurrence ?? null,
+        completed_at: task.completed_at ?? null,
       })
       .eq('id', task.id)
     if (error) throw new Error(error.message)

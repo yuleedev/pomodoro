@@ -27,6 +27,7 @@ export function App() {
   const focusMode = useStore((s) => s.focusMode)
   const loadTasks = useStore((s) => s.loadTasks)
   const loadCategories = useStore((s) => s.loadCategories)
+  const rolloverDailyTasks = useStore((s) => s.rolloverDailyTasks)
   const authOpen = useUI((s) => s.authOpen)
   const historyOpen = useUI((s) => s.historyOpen)
   const customizeOpen = useUI((s) => s.customizeOpen)
@@ -46,6 +47,16 @@ export function App() {
     void loadTasks()
     void loadCategories()
   }, [loadTasks, loadCategories, userId, authStatus])
+
+  // Re-open daily tasks when the app is refocused after a day boundary (e.g.
+  // left open overnight). The initial pass runs inside loadTasks.
+  useEffect(() => {
+    const onVisible = () => {
+      if (document.visibilityState === 'visible') rolloverDailyTasks()
+    }
+    document.addEventListener('visibilitychange', onVisible)
+    return () => document.removeEventListener('visibilitychange', onVisible)
+  }, [rolloverDailyTasks])
 
   return (
     <div className="min-h-dvh">

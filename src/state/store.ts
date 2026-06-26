@@ -11,6 +11,7 @@ import { persist } from 'zustand/middleware'
 import { engine } from '../audio/engine'
 import { buildCatalog, type Sound } from '../audio/catalog'
 import { recordSession } from '../lib/history'
+import { isToday } from '../lib/time'
 import {
   createTask,
   deleteTaskRow,
@@ -114,6 +115,10 @@ interface State {
   reorderTasks: (ordered: Task[]) => void
   selectTask: (id: string | null) => void
   bumpActiveTaskSession: () => void
+  /** Turn daily repeat on (`'daily'`) or off (`undefined`) for a task. */
+  setTaskRecurrence: (id: string, recurrence: Task['recurrence']) => void
+  /** Re-open any daily task that was completed on an earlier day. */
+  rolloverDailyTasks: () => void
 
   // categories
   loadCategories: () => Promise<void>
@@ -341,6 +346,7 @@ export const useStore = create<State>()(
       loadTasks: async () => {
         try {
           set({ tasks: await fetchTasks() })
+          get().rolloverDailyTasks()
         } catch {
           /* keep whatever we have on a transient failure */
         }
@@ -375,7 +381,13 @@ export const useStore = create<State>()(
       toggleTask: (id) => {
         const task = get().tasks.find((x) => x.id === id)
         if (!task) return
-        const updated = { ...task, completed: !task.completed }
+        const completed = !task.completed
+        // Stamp the completion time so a daily task knows which day it was for.
+        const updated = {
+          ...task,
+          completed,
+          completed_at: completed ? new Date().toISOString() : undefined,
+        }
         set({ tasks: get().tasks.map((x) => (x.id === id ? updated : x)) })
         void updateTask(updated)
       },
@@ -406,6 +418,30 @@ export const useStore = create<State>()(
         const updated = { ...task, session_count: task.session_count + 1 }
         set({ tasks: tasks.map((x) => (x.id === task.id ? updated : x)) })
         void updateTask(updated)
+      },
+
+      setTaskRecurrence: (id, recurrence) => {
+        const task = get().tasks.find((x) => x.id === id)
+        if (!task) return
+        const updated = { ...task, recurrence }
+        set({ tasks: get().tasks.map((x) => (x.id === id ? updated : x)) })
+        void updateTask(updated)
+      },
+
+      rolloverDailyTasks: () => {
+        const { tasks } = get()
+        let changed = false
+        const next = tasks.map((t) => {
+          // A daily task completed on an earlier day re-opens for today.
+          if (t.recurrence === 'daily' && t.completed && t.completed_at && !isToday(t.completed_at)) {
+            changed = true
+            const reset = { ...t, completed: false, completed_at: undefined }
+            void updateTask(reset)
+            return reset
+          }
+          return t
+        })
+        if (changed) set({ tasks: next })
       },
 
       // ── categories ──────────────────────────────────────────────────────────

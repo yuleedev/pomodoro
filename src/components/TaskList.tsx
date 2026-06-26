@@ -12,7 +12,7 @@
  */
 import { useState } from 'react'
 import { AnimatePresence, Reorder, useDragControls } from 'framer-motion'
-import { Check, GripVertical, Pencil, Plus, Trash2 } from 'lucide-react'
+import { Check, GripVertical, Pencil, Plus, Repeat, Trash2 } from 'lucide-react'
 import { useStore } from '../state/store'
 import type { Task } from '../lib/tasks'
 
@@ -78,6 +78,9 @@ function TaskRow({ task }: { task: Task }) {
   const toggleTask = useStore((s) => s.toggleTask)
   const deleteTask = useStore((s) => s.deleteTask)
   const renameTask = useStore((s) => s.renameTask)
+  const setTaskRecurrence = useStore((s) => s.setTaskRecurrence)
+
+  const repeats = task.recurrence === 'daily'
 
   const active = selectedTaskId === task.id
   const [editing, setEditing] = useState(false)
@@ -170,6 +173,23 @@ function TaskRow({ task }: { task: Task }) {
 
       {/* Session dots */}
       {task.session_count > 0 && <SessionDots count={task.session_count} />}
+
+      {/* Repeat-daily toggle. Stays visible while on, so it reads as a badge;
+          otherwise it only shows on row hover alongside the other actions. */}
+      <button
+        onClick={() => setTaskRecurrence(task.id, repeats ? undefined : 'daily')}
+        aria-label={repeats ? 'Stop repeating daily' : 'Repeat every day'}
+        aria-pressed={repeats}
+        title={repeats ? 'Repeats every day' : 'Repeat every day'}
+        className={`grid h-7 w-7 shrink-0 place-items-center rounded-full transition-all duration-200 hover:bg-fill-strong ${
+          repeats
+            ? 'opacity-100'
+            : 'text-tertiary opacity-0 hover:text-content group-hover:opacity-100'
+        }`}
+        style={repeats ? { color: 'var(--accent)' } : undefined}
+      >
+        <Repeat className="h-3.5 w-3.5" strokeWidth={1.5} />
+      </button>
 
       {/* Row actions (hover) */}
       <div className="flex shrink-0 items-center opacity-0 transition-opacity duration-200 group-hover:opacity-100">
