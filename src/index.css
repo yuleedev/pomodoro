@@ -262,3 +262,40 @@
 .animate-fade-in {
   animation: fade-in 0.5s var(--ease-out) both;
 }
+
+/*
+ * Persistent backdrop softening for modal overlays.
+ *
+ * Chromium drops a `backdrop-filter` when a sibling/subtree recomposites (e.g.
+ * a Framer Motion card finishing its spring), which made the blur snap to clear
+ * after ~1s. An always-running, imperceptible animation ON the filter keeps the
+ * compositor repainting that layer every frame, so it can never be torn down.
+ */
+@keyframes backdrop-keepalive {
+  0%,
+  100% {
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+  }
+  50% {
+    backdrop-filter: blur(6.01px);
+    -webkit-backdrop-filter: blur(6.01px);
+  }
+}
+
+.backdrop-soften {
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  /* translateZ keeps it on its own layer; the keepalive animation keeps that
+     layer live so the recomposite invalidation can't drop the blur. */
+  transform: translateZ(0);
+  will-change: backdrop-filter;
+  animation: backdrop-keepalive 6s linear infinite;
+}
+
+/* Respect reduced-motion: drop the keepalive loop but keep a static blur. */
+@media (prefers-reduced-motion: reduce) {
+  .backdrop-soften {
+    animation: none;
+  }
+}

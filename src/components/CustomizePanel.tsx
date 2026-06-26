@@ -45,12 +45,10 @@ export function CustomizePanel() {
 
   return (
     <div className="fixed inset-0 z-[60] flex items-end justify-center sm:items-center">
-      {/* Backdrop. Pinned to its own compositing layer (translateZ + will-change)
-          so the panel card's spring animation finishing can't make Chromium
-          invalidate and drop this backdrop-filter (the blur snapping to clear). */}
+      {/* Backdrop. `backdrop-soften` keeps the blur alive permanently (see
+          index.css) so the card's spring animation can't make Chromium drop it. */}
       <div
-        className="absolute inset-0 bg-black/40 backdrop-blur-sm"
-        style={{ transform: 'translateZ(0)', willChange: 'transform' }}
+        className="backdrop-soften absolute inset-0 bg-black/40"
         onClick={close}
         aria-hidden="true"
       />
