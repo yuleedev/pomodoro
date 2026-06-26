@@ -24,6 +24,8 @@ export interface Task {
   recurrence?: 'daily'
   /** ISO timestamp of the last completion - drives the daily reset. */
   completed_at?: string
+  /** Free-form note attached to the task. */
+  notes?: string
 }
 
 const isRemote = () => Boolean(getCurrentUserId() && supabase)
@@ -57,6 +59,7 @@ function toRow(t: Task) {
     position: t.position,
     recurrence: t.recurrence ?? null,
     completed_at: t.completed_at ?? null,
+    notes: t.notes ?? null,
   }
 }
 
@@ -104,6 +107,7 @@ export async function updateTask(task: Task): Promise<void> {
         position: task.position,
         recurrence: task.recurrence ?? null,
         completed_at: task.completed_at ?? null,
+        notes: task.notes ?? null,
       })
       .eq('id', task.id)
     if (error) throw new Error(error.message)

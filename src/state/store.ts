@@ -117,6 +117,8 @@ interface State {
   bumpActiveTaskSession: () => void
   /** Turn daily repeat on (`'daily'`) or off (`undefined`) for a task. */
   setTaskRecurrence: (id: string, recurrence: Task['recurrence']) => void
+  /** Attach (or clear, when empty) a free-form note on a task. */
+  setTaskNotes: (id: string, notes: string) => void
   /** Re-open any daily task that was completed on an earlier day. */
   rolloverDailyTasks: () => void
 
@@ -424,6 +426,16 @@ export const useStore = create<State>()(
         const task = get().tasks.find((x) => x.id === id)
         if (!task) return
         const updated = { ...task, recurrence }
+        set({ tasks: get().tasks.map((x) => (x.id === id ? updated : x)) })
+        void updateTask(updated)
+      },
+
+      setTaskNotes: (id, notes) => {
+        const task = get().tasks.find((x) => x.id === id)
+        if (!task) return
+        const trimmed = notes.trim()
+        if ((task.notes ?? '') === trimmed) return // no-op: avoid a needless write
+        const updated = { ...task, notes: trimmed || undefined }
         set({ tasks: get().tasks.map((x) => (x.id === id ? updated : x)) })
         void updateTask(updated)
       },

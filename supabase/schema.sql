@@ -65,12 +65,14 @@ create table if not exists public.tasks (
   position      int not null default 0,         -- sort order (ascending)
   created_at    timestamptz not null default now(),
   recurrence    text,                            -- 'daily' = repeats each day; null = one-off
-  completed_at  timestamptz                      -- last completion (drives the daily reset)
+  completed_at  timestamptz,                     -- last completion (drives the daily reset)
+  notes         text                             -- free-form note attached to the task
 );
 
--- Backfill the recurrence columns onto pre-existing task tables.
+-- Backfill the newer columns onto pre-existing task tables.
 alter table public.tasks add column if not exists recurrence   text;
 alter table public.tasks add column if not exists completed_at timestamptz;
+alter table public.tasks add column if not exists notes        text;
 
 create index if not exists tasks_user_position_idx
   on public.tasks (user_id, position asc);

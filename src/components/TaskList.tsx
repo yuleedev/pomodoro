@@ -11,8 +11,8 @@
  * gated to an explicit grip handle so taps on the checkbox/title still work.
  */
 import { useState } from 'react'
-import { AnimatePresence, Reorder, useDragControls } from 'framer-motion'
-import { Check, GripVertical, Pencil, Plus, Repeat, Trash2 } from 'lucide-react'
+import { AnimatePresence, motion, Reorder, useDragControls } from 'framer-motion'
+import { Check, GripVertical, Pencil, Plus, Repeat, StickyNote, Trash2 } from 'lucide-react'
 import { useStore } from '../state/store'
 import type { Task } from '../lib/tasks'
 
@@ -79,12 +79,16 @@ function TaskRow({ task }: { task: Task }) {
   const deleteTask = useStore((s) => s.deleteTask)
   const renameTask = useStore((s) => s.renameTask)
   const setTaskRecurrence = useStore((s) => s.setTaskRecurrence)
+  const setTaskNotes = useStore((s) => s.setTaskNotes)
 
   const repeats = task.recurrence === 'daily'
+  const hasNotes = Boolean(task.notes && task.notes.trim())
 
   const active = selectedTaskId === task.id
   const [editing, setEditing] = useState(false)
   const [val, setVal] = useState(task.title)
+  const [notesOpen, setNotesOpen] = useState(false)
+  const [noteVal, setNoteVal] = useState(task.notes ?? '')
 
   const commit = () => {
     setEditing(false)
@@ -102,10 +106,11 @@ function TaskRow({ task }: { task: Task }) {
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, transition: { duration: 0.15 } }}
       transition={{ type: 'spring', stiffness: 520, damping: 42 }}
-      className={`group relative flex items-center gap-2 rounded-[var(--radius-lg)] py-2.5 pl-2 pr-2 transition-colors duration-200 ${
+      className={`group relative rounded-[var(--radius-lg)] transition-colors duration-200 ${
         active ? 'bg-fill' : 'hover:bg-fill'
       }`}
     >
+      <div className="relative flex items-center gap-2 py-2.5 pl-2 pr-2">
       {/* Active accent bar */}
       {active && (
         <span
@@ -191,6 +196,23 @@ function TaskRow({ task }: { task: Task }) {
         <Repeat className="h-3.5 w-3.5" strokeWidth={1.5} />
       </button>
 
+      {/* Notes toggle. Like the repeat badge: stays lit while a note exists or
+          the editor is open, otherwise reveals on row hover. */}
+      <button
+        onClick={() => setNotesOpen((o) => !o)}
+        aria-label={hasNotes ? 'Edit notes' : 'Add notes'}
+        aria-expanded={notesOpen}
+        title={hasNotes ? 'Notes' : 'Add notes'}
+        className={`grid h-7 w-7 shrink-0 place-items-center rounded-full transition-all duration-200 hover:bg-fill-strong ${
+          hasNotes || notesOpen
+            ? 'opacity-100'
+            : 'text-tertiary opacity-0 hover:text-content group-hover:opacity-100'
+        }`}
+        style={hasNotes ? { color: 'var(--accent)' } : undefined}
+      >
+        <StickyNote className="h-3.5 w-3.5" strokeWidth={1.5} />
+      </button>
+
       {/* Row actions (hover) */}
       <div className="flex shrink-0 items-center opacity-0 transition-opacity duration-200 group-hover:opacity-100">
         <button
@@ -208,6 +230,37 @@ function TaskRow({ task }: { task: Task }) {
           <Trash2 className="h-3.5 w-3.5" strokeWidth={1.5} />
         </button>
       </div>
+      </div>
+
+      {/* Expandable notes editor - saves on blur, Esc closes without saving. */}
+      <AnimatePresence initial={false}>
+        {notesOpen && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: 'auto', opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.18, ease: [0.22, 1, 0.36, 1] }}
+            className="overflow-hidden"
+          >
+            <textarea
+              autoFocus
+              value={noteVal}
+              onChange={(e) => setNoteVal(e.target.value)}
+              onBlur={() => setTaskNotes(task.id, noteVal)}
+              onKeyDown={(e) => {
+                if (e.key === 'Escape') {
+                  setNoteVal(task.notes ?? '')
+                  setNotesOpen(false)
+                }
+              }}
+              placeholder="Add notes…"
+              rows={3}
+              className="mb-2 ml-9 mr-2 block w-[calc(100%-2.75rem)] resize-none rounded-[var(--radius-lg)] bg-fill px-3 py-2 text-[14px] leading-relaxed text-content placeholder:text-tertiary focus:outline-none focus:ring-1 focus:ring-hairline-strong"
+              aria-label={`Notes for ${task.title}`}
+            />
+          </motion.div>
+        )}
+      </AnimatePresence>
     </Reorder.Item>
   )
 }
