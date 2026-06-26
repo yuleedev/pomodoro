@@ -14,8 +14,6 @@ interface Layer {
   /** Nodes to disconnect/stop when the layer is removed. */
   nodes: AudioNode[]
   gain: GainNode
-  /** Media element to pause/cleanup, for stream/file layers. */
-  media?: HTMLAudioElement
 }
 
 const RAMP = 0.08 // seconds — short, smooth volume ramps avoid clicks
@@ -89,21 +87,9 @@ export class AudioEngine {
       })
       node.connect(gain)
       layer.nodes.push(node)
-    } else if (sound.kind === 'ambient') {
-      this.buildAmbient(ctx, sound, gain, layer)
     } else {
-      // stream or file — play an HTMLAudioElement through the graph.
-      const el = new Audio(sound.src)
-      el.loop = true
-      el.crossOrigin = 'anonymous'
-      el.preload = 'auto'
-      const srcNode = ctx.createMediaElementSource(el)
-      srcNode.connect(gain)
-      layer.nodes.push(srcNode)
-      layer.media = el
-      el.play().catch(() => {
-        /* Autoplay/CORS issues surface as a flat layer; ignore quietly. */
-      })
+      // ambient — procedural, built from the same worklet + filters/LFOs.
+      this.buildAmbient(ctx, sound, gain, layer)
     }
 
     this.layers.set(sound.id, layer)
@@ -195,8 +181,6 @@ export class AudioEngine {
     layer.gain.gain.setTargetAtTime(0, now, RAMP)
     // Tear down after the fade completes.
     window.setTimeout(() => {
-      layer.media?.pause()
-      if (layer.media) layer.media.src = ''
       for (const node of layer.nodes) {
         try {
           ;(node as OscillatorNode).stop?.()

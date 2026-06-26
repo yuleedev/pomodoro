@@ -36,9 +36,6 @@ interface State {
   mix: Record<string, number>
   isPlaying: boolean
 
-  /** User-added local files (session-only; object URLs are not persisted). */
-  userFiles: Sound[]
-
   timer: TimerConfig
   phase: TimerPhase
   remainingSec: number
@@ -60,8 +57,6 @@ interface State {
   toggleSound: (id: string) => void
   setVolume: (id: string, v: number) => void
   togglePlay: () => void
-  addUserFile: (file: File) => void
-  removeUserFile: (id: string) => void
 
   setTimerConfig: (c: Partial<TimerConfig>) => void
   startTimer: () => void
@@ -82,9 +77,9 @@ interface State {
   bumpActiveTaskSession: () => void
 }
 
-/** Resolve a sound by id from the built-in catalog or the user's files. */
-function findSound(id: string, userFiles: Sound[]): Sound | undefined {
-  return buildCatalog().find((s) => s.id === id) ?? userFiles.find((s) => s.id === id)
+/** Resolve a sound by id from the built-in catalog. */
+function findSound(id: string): Sound | undefined {
+  return buildCatalog().find((s) => s.id === id)
 }
 
 // Module-level interval handle for the timer tick (kept out of React state).
@@ -97,7 +92,6 @@ export const useStore = create<State>()(
       masterVolume: 0.8,
       mix: {},
       isPlaying: false,
-      userFiles: [],
 
       timer: { workMinutes: 25, breakMinutes: 5, sessions: 4 },
       phase: 'idle',
@@ -130,7 +124,7 @@ export const useStore = create<State>()(
       },
 
       toggleSound: (id) => {
-        const { mix, userFiles, isPlaying, masterVolume } = get()
+        const { mix, isPlaying, masterVolume } = get()
         if (id in mix) {
           // Remove from the mix.
           engine.stop(id)
@@ -139,7 +133,7 @@ export const useStore = create<State>()(
           const stillPlaying = Object.keys(next).length > 0 && isPlaying
           set({ mix: next, isPlaying: stillPlaying })
         } else {
-          const sound = findSound(id, userFiles)
+          const sound = findSound(id)
           if (!sound) return
           engine.setMasterVolume(masterVolume)
           void engine.start(sound, sound.defaultVolume)
@@ -154,7 +148,7 @@ export const useStore = create<State>()(
       },
 
       togglePlay: () => {
-        const { isPlaying, mix, userFiles, masterVolume } = get()
+        const { isPlaying, mix, masterVolume } = get()
         if (isPlaying) {
           void engine.suspend()
           set({ isPlaying: false })
@@ -162,41 +156,12 @@ export const useStore = create<State>()(
           // Start any mix entries that aren't live yet (e.g. after a reload).
           engine.setMasterVolume(masterVolume)
           for (const [id, vol] of Object.entries(mix)) {
-            const sound = findSound(id, userFiles)
+            const sound = findSound(id)
             if (sound) void engine.start(sound, vol)
           }
           void engine.resume()
           set({ isPlaying: true })
         }
-      },
-
-      addUserFile: (file) => {
-        const id = `file-${Date.now()}-${Math.round(performance.now())}`
-        const sound: Sound = {
-          id,
-          name: file.name.replace(/\.[^.]+$/, ''),
-          kind: 'file',
-          category: 'Yours',
-          src: URL.createObjectURL(file),
-          defaultVolume: 0.7,
-          description: 'A track you added from your device.',
-        }
-        set({ userFiles: [...get().userFiles, sound] })
-      },
-
-      removeUserFile: (id) => {
-        const { mix, userFiles, isPlaying } = get()
-        const file = userFiles.find((f) => f.id === id)
-        // Stop it if it's playing and drop it from the mix.
-        if (id in mix) {
-          engine.stop(id)
-          const next = { ...mix }
-          delete next[id]
-          set({ mix: next, isPlaying: Object.keys(next).length > 0 && isPlaying })
-        }
-        // Free the object URL and remove the file from the library.
-        if (file?.src) URL.revokeObjectURL(file.src)
-        set({ userFiles: userFiles.filter((f) => f.id !== id) })
       },
 
       setTimerConfig: (c) => {
@@ -386,9 +351,9 @@ function startTicking(set: SetFn, get: GetFn) {
 
 /** A human-readable summary of what was playing, for the session's soundscape. */
 function mixDescription(get: GetFn): string | null {
-  const { mix, userFiles } = get()
+  const { mix } = get()
   const names = Object.keys(mix)
-    .map((id) => findSound(id, userFiles)?.name)
+    .map((id) => findSound(id)?.name)
     .filter((n): n is string => Boolean(n))
   return names.length ? names.join(', ') : null
 }

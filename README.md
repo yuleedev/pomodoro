@@ -14,9 +14,8 @@ monochrome (black/white/gray only, no color accents ever).
   session dot to it. Completed tasks de-emphasize (strikethrough) rather than
   vanish.
 - **Soundscapes (secondary)** — procedural white/pink/brown noise and rain/wind
-  generated live with the Web Audio API (offline, no licensing); add your own
-  audio from your device, or wire up royalty-free streams in one config file;
-  layer sounds with per-track volume.
+  generated live with the Web Audio API (offline, no files, no licensing); layer
+  sounds with per-track volume.
 - **Accounts & cross-device sync** *(optional)* — passwordless magic-link sign-in
   via Supabase. Tasks and completed focus sessions sync to your account and work
   on any device. Signed out, everything is kept in `localStorage` and synced up
@@ -137,43 +136,14 @@ For production volume, configure your own SMTP under **Authentication → Emails
   affected.
 - **Sign out**: the account avatar (top right) → **Sign out**.
 
-## Adding your own sounds
+## Sounds
 
-There are two ways to bring lofi, jazz, or any other audio into the player.
-
-### 1. From your device (no setup)
-
-Open the app, scroll to **Sounds → Yours**, and click **Add your audio**. Pick
-one or more audio files. They play locally and never leave your machine (they
-are session-only and not persisted).
-
-### 2. Royalty-free streams (shared config)
-
-The app ships with **no copyrighted tracks**. To add a stream that anyone using
-your build can play, edit **`src/config/sources.ts`** and fill in a `streamUrl`:
-
-```ts
-export const STREAM_SOURCES: StreamSource[] = [
-  {
-    id: 'lofi-stream-1',
-    name: 'My Lofi Stream',
-    genre: 'lofi',                       // 'lofi' | 'jazz' | 'ambient'
-    streamUrl: 'https://example.com/your-royalty-free-stream.mp3',
-  },
-  // ...add as many as you like
-]
-```
-
-- Entries with an empty `streamUrl` are placeholders and stay hidden.
-- Any entry with a URL appears automatically in the sound library under its
-  genre, ready to mix.
-- Use only audio you have the right to use. Good sources for royalty-free music:
-  - [Free Music Archive](https://freemusicarchive.org) (check each license)
-  - [Incompetech](https://incompetech.com) (Kevin MacLeod, CC-BY)
-  - Your own self-hosted files.
-- For the live waveform to react to a stream, the host must allow cross-origin
-  requests (CORS). Without CORS the audio still plays; the visualizer just stays
-  calm.
+The soundscape layer is fully procedural — there are no audio files, uploads, or
+external streams. Five generators (white / pink / brown noise, rain, wind) are
+synthesized live with the Web Audio API, so they always work offline and are
+license-free. Toggle any of them under **Sounds** and balance them in the
+**Mix**. To add or tweak generators, edit `src/audio/catalog.ts` (and, for new
+synthesis, `public/noise-processor.js` / `src/audio/engine.ts`).
 
 ## Keyboard shortcuts
 
@@ -194,7 +164,6 @@ Shortcuts are ignored while you're typing in a field.
 - **Ambient** sounds reuse that worklet, then shape it with `BiquadFilter`s and
   slow LFOs (rain = filtered white noise with gentle swells; wind = filtered
   brown noise with a drifting cutoff).
-- **Files & streams** play through an `HTMLAudioElement` routed into the graph.
 - Everything mixes into a master gain → output. Each sound has its own gain node
   (its volume slider). See `src/audio/engine.ts`. The timer's breathing ring is a
   pure-CSS animation tied to the running state, not the audio signal.
@@ -207,9 +176,8 @@ supabase/schema.sql         pomodoro_sessions + tasks tables, RLS (run in Supaba
 src/
   index.css                 Design system: monochrome tokens, typography, texture
   audio/
-    catalog.ts              The sound library (procedural + configured streams)
+    catalog.ts              The sound library (procedural generators)
     engine.ts               Web Audio graph manager
-  config/sources.ts         ← add royalty-free jazz/lofi/ambient streams here
   lib/
     supabase.ts             Supabase client (from VITE_ env vars; null if unset)
     user.ts                 Shared current-user id (no import cycles)

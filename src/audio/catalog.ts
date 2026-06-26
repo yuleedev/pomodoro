@@ -1,15 +1,12 @@
 /*
- * The sound library. Each entry is something the user can layer into the mix.
- * Procedural sounds (noise, ambient) always work offline; stream sounds come
- * from src/config/sources.ts and only appear when a URL is provided.
- *
- * `description` is a short human-readable note for each sound.
+ * The sound library — fully procedural, generated in real time with the Web
+ * Audio API. No files, no external streams, no uploads: everything here works
+ * offline and is license-free.
  */
-import { enabledStreamSources } from '../config/sources'
 
-export type SoundKind = 'noise' | 'ambient' | 'stream' | 'file'
+export type SoundKind = 'noise' | 'ambient'
 
-export type SoundCategory = 'Noise' | 'Ambient' | 'Lofi' | 'Jazz' | 'Yours'
+export type SoundCategory = 'Noise' | 'Ambient'
 
 export interface Sound {
   id: string
@@ -22,8 +19,6 @@ export interface Sound {
   noiseType?: 'white' | 'pink' | 'brown'
   /** procedural ambient sounds only */
   ambientType?: 'rain' | 'wind'
-  /** stream / file sounds only */
-  src?: string
 }
 
 /** Procedural sounds — generated in real time, always available offline. */
@@ -75,19 +70,7 @@ const PROCEDURAL: Sound[] = [
   },
 ]
 
-/** Catalog entries derived from user-configured royalty-free streams. */
-const streams = (): Sound[] =>
-  enabledStreamSources().map((s) => ({
-    id: s.id,
-    name: s.name,
-    kind: 'stream' as const,
-    category: (s.genre === 'lofi' ? 'Lofi' : s.genre === 'jazz' ? 'Jazz' : 'Ambient') as SoundCategory,
-    src: s.streamUrl,
-    defaultVolume: 0.7,
-    description: `${s.genre} stream — foreground music for relaxed studying.`,
-  }))
+/** The full built-in catalog. */
+export const buildCatalog = (): Sound[] => [...PROCEDURAL]
 
-/** The full built-in catalog (procedural + configured streams). */
-export const buildCatalog = (): Sound[] => [...PROCEDURAL, ...streams()]
-
-export const CATEGORY_ORDER: SoundCategory[] = ['Noise', 'Ambient', 'Lofi', 'Jazz', 'Yours']
+export const CATEGORY_ORDER: SoundCategory[] = ['Noise', 'Ambient']

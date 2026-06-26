@@ -1,7 +1,7 @@
 /*
  * The mixer — every active sound with its own thin volume slider, so layers
- * like "lofi + rain + brown noise" can be balanced individually. Empty until
- * the first sound is added (clean empty state).
+ * like "rain + brown noise" can be balanced individually. Empty until the first
+ * sound is added (clean empty state).
  */
 import { X } from 'lucide-react'
 import { buildCatalog, type Sound } from '../audio/catalog'
@@ -10,11 +10,10 @@ import { Slider } from './Slider'
 
 export function Mixer() {
   const mix = useStore((s) => s.mix)
-  const userFiles = useStore((s) => s.userFiles)
   const setVolume = useStore((s) => s.setVolume)
   const toggleSound = useStore((s) => s.toggleSound)
 
-  const all: Sound[] = [...buildCatalog(), ...userFiles]
+  const all: Sound[] = buildCatalog()
   const active = Object.keys(mix)
     .map((id) => all.find((s) => s.id === id))
     .filter((s): s is Sound => Boolean(s))
