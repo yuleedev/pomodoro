@@ -220,9 +220,8 @@ export function CustomizePanel() {
           </div>
 
           <p className="mt-3 text-[13px] leading-relaxed text-tertiary">
-            Your color tints the entire app (background, text, and controls), not
-            just the ring. Drag the spectrum to try a color, then press Enter to add
-            it to your palette. Pick Monochrome for the original black-and-white look.
+            Drag the spectrum to try a color, then press Enter to add it to your
+            palette. Pick Monochrome for the original black-and-white look.
           </p>
         </Section>
       </motion.div>
