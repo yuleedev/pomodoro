@@ -3,8 +3,8 @@
  *
  * The app is monochrome by default; here the user can pick an accent or build
  * their own palette (presets + their own colors via the native color picker).
- * The accent flows through the timer ring, breathing glow, session dots, and
- * the active-task indicator via the global --accent variable.
+ * The accent flows through the timer ring, session dots, and the active-task
+ * indicator via the global --accent variable.
  */
 import { Check, Moon, Plus, Sun, X } from 'lucide-react'
 import { useStore, type TimerStyle } from '../state/store'

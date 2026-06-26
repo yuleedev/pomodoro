@@ -1,15 +1,18 @@
 /*
  * The timer's progress indicator, in several styles. Every style visualizes the
- * SAME thing - the fraction of time remaining - and uses the accent color
- * (which defaults to the monochrome ink tone via --accent).
+ * SAME thing - elapsed progress - and uses the accent color (which defaults to
+ * the monochrome ink tone via --accent).
  *
- *  • ring      - a smooth circular border that depletes
- *  • squiggle  - a wavy circular border that depletes
- *  • segments  - a ring of tick marks; remaining ticks are accented
- *  • dot       - a marker orbiting a faint track
+ * Progress always sweeps CLOCKWISE FROM THE TOP (12 o'clock) as time runs out,
+ * so the indicator reads consistently across every style:
+ *
+ *  • ring      - an arc that fills clockwise from the top
+ *  • squiggle  - a wavy arc that fills clockwise from the top
+ *  • segments  - tick marks that light up one by one, clockwise from the top
+ *  • dot       - a marker that travels clockwise from the top
  *
  * SVG `pathLength={1}` normalizes any path to length 1, so progress is just
- * strokeDashoffset = 1 − fraction regardless of the shape's real length.
+ * strokeDashoffset = 1 - p regardless of the shape's real length.
  */
 import { useMemo } from 'react'
 import type { TimerStyle } from '../state/store'
@@ -22,24 +25,26 @@ export function TimerRing({
   fraction,
   style,
 }: {
+  /** Fraction of time REMAINING (1 = full, 0 = done). */
   fraction: number
   style: TimerStyle
 }) {
-  const f = Math.max(0, Math.min(1, fraction))
+  // Elapsed progress: what the indicator fills in, clockwise from the top.
+  const p = 1 - Math.max(0, Math.min(1, fraction))
 
   return (
     <div className="absolute inset-0">
       <svg viewBox="0 0 100 100" className="h-full w-full">
-        {style === 'ring' && <RingStyle f={f} />}
-        {style === 'squiggle' && <SquiggleStyle f={f} />}
-        {style === 'segments' && <SegmentsStyle f={f} />}
-        {style === 'dot' && <DotStyle f={f} />}
+        {style === 'ring' && <RingStyle p={p} />}
+        {style === 'squiggle' && <SquiggleStyle p={p} />}
+        {style === 'segments' && <SegmentsStyle p={p} />}
+        {style === 'dot' && <DotStyle p={p} />}
       </svg>
     </div>
   )
 }
 
-function RingStyle({ f }: { f: number }) {
+function RingStyle({ p }: { p: number }) {
   return (
     <g transform="rotate(-90 50 50)">
       <circle cx="50" cy="50" r={R} fill="none" stroke={TRACK} strokeWidth="2" />
@@ -53,14 +58,14 @@ function RingStyle({ f }: { f: number }) {
         strokeLinecap="round"
         pathLength={1}
         strokeDasharray={1}
-        strokeDashoffset={1 - f}
+        strokeDashoffset={1 - p}
         style={{ transition: 'stroke-dashoffset 0.6s linear' }}
       />
     </g>
   )
 }
 
-function SquiggleStyle({ f }: { f: number }) {
+function SquiggleStyle({ p }: { p: number }) {
   const d = useMemo(() => squigglePath(R - 3, 14, 2.6), [])
   return (
     <g transform="rotate(-90 50 50)">
@@ -73,16 +78,16 @@ function SquiggleStyle({ f }: { f: number }) {
         strokeLinecap="round"
         pathLength={1}
         strokeDasharray={1}
-        strokeDashoffset={1 - f}
+        strokeDashoffset={1 - p}
         style={{ transition: 'stroke-dashoffset 0.6s linear' }}
       />
     </g>
   )
 }
 
-function SegmentsStyle({ f }: { f: number }) {
+function SegmentsStyle({ p }: { p: number }) {
   const N = 56
-  const lit = Math.round(f * N)
+  const lit = Math.round(p * N)
   const inner = 40
   const outer = R
   return (
@@ -109,9 +114,9 @@ function SegmentsStyle({ f }: { f: number }) {
   )
 }
 
-function DotStyle({ f }: { f: number }) {
-  // The dot marks the consumed boundary: top at full, a complete loop at zero.
-  const a = (-90 + 360 * (1 - f)) * (Math.PI / 180)
+function DotStyle({ p }: { p: number }) {
+  // The dot marks how far we've travelled: top at the start, a full loop at the end.
+  const a = (-90 + 360 * p) * (Math.PI / 180)
   const x = 50 + R * Math.cos(a)
   const y = 50 + R * Math.sin(a)
   return (
