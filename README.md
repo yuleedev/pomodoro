@@ -81,9 +81,10 @@ history that follows the user across devices.
 
 Open **SQL Editor → New query**, paste the contents of
 [`supabase/schema.sql`](./supabase/schema.sql), and **Run**. This creates the
-`pomodoro_sessions` and `tasks` tables, enables RLS on both, and adds policies so
-each user can only read/insert/update/delete **their own** rows
-(`user_id = auth.uid()`). (The file is safe to re-run.)
+`pomodoro_sessions`, `tasks`, and `categories` tables (plus a `category` column
+on `pomodoro_sessions`), enables RLS on all, and adds policies so each user can
+only read/insert/update/delete **their own** rows (`user_id = auth.uid()`). (The
+file is safe to re-run.)
 
 > ⚠️ RLS is what makes the public anon key safe in the browser. Don't skip it —
 > with RLS off, the anon key could read everyone's data.
