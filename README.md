@@ -33,16 +33,41 @@ default, with an optional accent color you can set (or build your own palette).
 - **Local-first** — preferences, tasks, mix, and history persist locally; the
   core app needs no backend. Supabase only adds optional accounts + sync.
 
-## Tech
+## Tech stack
 
-React + Vite + TypeScript, Web Audio API, Tailwind CSS, Zustand, Supabase (auth +
-Postgres), and Framer Motion. Icons from Lucide.
+A deliberately small, mostly client-side stack. The core app is a static
+single-page React build with no server; everything below earns its place.
 
-**Why Framer Motion?** One small, focused dependency powers the springy task
-reorder (its accessible `Reorder` primitive — handle-gated drag, no heavyweight
-drag-and-drop library) plus the animated add/remove of list items. Everything
-else (timer ring, hovers, presses, theme transition, the breathing element) is
-hand-built CSS — no other UI/animation libraries.
+- **React 19 + TypeScript** form the UI layer, written as small function
+  components with hooks. TypeScript runs in strict mode (`noUnusedLocals` /
+  `noUnusedParameters` on), so dead code and loose types fail the build rather
+  than ship.
+- **Vite** is the dev server and bundler. It gives near-instant HMR in
+  development and emits a static `dist/` for production, which is why the app
+  deploys to any static host with zero backend.
+- **Tailwind CSS v4** handles styling with its CSS-first config: the design
+  system lives in `src/index.css` as CSS custom properties (the monochrome
+  tokens, spacing, easing) mapped into Tailwind via `@theme`. The single
+  `--accent` variable is what lets one color re-tint the entire palette at
+  runtime.
+- **Zustand** is the state store. One small hook-based store (`src/state/store.ts`)
+  holds timer, tasks, mix, and appearance state, with its `persist` middleware
+  writing durable preferences to `localStorage` so they survive reloads. A second
+  tiny store (`ui.ts`) tracks which overlays are open.
+- **Web Audio API** generates the soundscapes. Procedural white/pink/brown noise
+  runs in an `AudioWorklet` off the main thread, then `BiquadFilter`s and slow
+  LFOs shape it into rain and wind. No audio files, no network, fully offline.
+- **Supabase** (optional) provides passwordless magic-link auth and a Postgres
+  database for cross-device sync. Row-Level Security scopes every row to its
+  owner, which is what makes shipping the public anon key in the browser safe.
+  Left unconfigured, the app falls back to `localStorage` and runs fully.
+- **Framer Motion** is the only animation dependency, and a focused one: it
+  powers the spring-based task reorder (its accessible `Reorder` primitive with
+  handle-gated drag, instead of a heavyweight drag-and-drop library) and the
+  animated add/remove of list items. Everything else (the timer ring, hovers,
+  presses, theme transition) is hand-built CSS.
+- **Lucide** supplies the line icons, kept at a consistent 1.5px stroke weight to
+  match the restrained, monochrome look.
 
 ## Run it
 

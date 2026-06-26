@@ -28,7 +28,7 @@ export function SoundPanel() {
         initial={{ opacity: 0, y: 24, scale: 0.96 }}
         animate={{ opacity: 1, y: 0, scale: 1 }}
         transition={popSpring}
-        className="glass relative m-3 flex max-h-[85dvh] w-full max-w-md flex-col rounded-[var(--radius-2xl)] p-6 shadow-[var(--shadow)]"
+        className="relative m-3 flex max-h-[85dvh] w-full max-w-md flex-col rounded-[var(--radius-2xl)] border border-hairline bg-elevated p-6 shadow-[var(--shadow)]"
       >
         <div className="mb-6 flex items-center justify-between">
           <h2 className="text-[20px] font-medium tracking-tight text-content">Soundscape</h2>
