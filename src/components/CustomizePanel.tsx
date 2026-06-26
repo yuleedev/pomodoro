@@ -8,7 +8,7 @@
  */
 import { useState } from 'react'
 import { motion } from 'framer-motion'
-import { Check, Moon, Plus, Sun, X } from 'lucide-react'
+import { Check, Moon, Sun, X } from 'lucide-react'
 import { useStore, type TimerStyle } from '../state/store'
 import { useUI } from '../state/ui'
 import { popSpring, spring, tapScale } from '../lib/motion'
@@ -43,15 +43,15 @@ export function CustomizePanel() {
   const customSwatches = useStore((s) => s.customSwatches)
   const addSwatch = useStore((s) => s.addSwatch)
   const removeSwatch = useStore((s) => s.removeSwatch)
+  const clearSwatches = useStore((s) => s.clearSwatches)
 
-  // Color staged in the native picker. Dragging the spectrum only updates this
-  // draft (and the live preview); it's saved to the palette only on an explicit
-  // click of the confirm swatch - so dragging never spams the selector.
-  const [draft, setDraft] = useState<string | null>(null)
+  // The hex shown in the picker. Moving the spectrum live-previews the accent
+  // but does NOT save it; the color joins the palette only when you press Enter.
+  const [hex, setHex] = useState(accent ?? '#4f7df0')
 
-  const commitDraft = () => {
-    if (draft) addSwatch(draft)
-    setDraft(null)
+  const commitHex = () => {
+    const v = hex.trim().toLowerCase()
+    if (/^#[0-9a-f]{6}$/.test(v)) addSwatch(v) // addSwatch sets the accent + saves it
   }
 
   return (
@@ -136,9 +136,8 @@ export function CustomizePanel() {
 
         {/* Color theme */}
         <Section title="Color theme">
-          {/* Live preview of the whole-app tint - shows the staged draft while
-              the picker is open, otherwise the saved selection. */}
-          <ThemePreview accent={draft ?? accent} />
+          {/* Live preview of the whole-app tint for the current selection. */}
+          <ThemePreview accent={accent} />
 
           <div className="mt-4 flex flex-wrap items-center gap-3">
             {/* Monochrome (default) */}
@@ -177,58 +176,53 @@ export function CustomizePanel() {
               </div>
             ))}
 
-            {/* Staged color - dragging the picker lands here; it joins the
-                palette only when this confirm swatch is clicked. */}
-            {draft && (
-              <div className="group relative">
-                <motion.button
-                  initial={{ scale: 0.6, opacity: 0 }}
-                  animate={{ scale: 1, opacity: 1 }}
-                  transition={popSpring}
-                  onClick={commitDraft}
-                  title={`Add ${draft}`}
-                  aria-label={`Add ${draft} to your colors`}
-                  className="grid h-8 w-8 place-items-center rounded-full border border-hairline ring-2 ring-content ring-offset-2 ring-offset-elevated"
-                  style={{ backgroundColor: draft }}
-                >
-                  <Check className="h-4 w-4 text-white mix-blend-difference" strokeWidth={2.5} />
-                </motion.button>
-                <button
-                  onClick={() => setDraft(null)}
-                  aria-label="Discard color"
-                  className="absolute -right-1 -top-1 grid h-4 w-4 place-items-center rounded-full bg-elevated text-tertiary opacity-0 shadow-[var(--shadow)] transition-opacity duration-150 hover:text-content group-hover:opacity-100"
-                >
-                  <X className="h-2.5 w-2.5" strokeWidth={2} />
-                </button>
-              </div>
+            {customSwatches.length > 0 && (
+              <button
+                onClick={clearSwatches}
+                className="ml-1 text-[12px] text-tertiary underline-offset-4 transition-colors hover:text-content hover:underline"
+              >
+                Clear all
+              </button>
             )}
+          </div>
 
-            {/* Open the native picker to stage a custom color */}
+          {/* Custom color: drag the spectrum to preview, press Enter to save it. */}
+          <div className="mt-4 flex items-center gap-2">
             <label
-              className="grid h-8 w-8 cursor-pointer place-items-center rounded-full border border-dashed border-hairline-strong text-tertiary transition-colors duration-200 hover:bg-fill hover:text-content"
-              title="Pick a custom color"
+              className="relative h-9 w-9 shrink-0 cursor-pointer overflow-hidden rounded-full border border-hairline"
+              title="Pick from the color spectrum"
+              style={{ backgroundColor: hex }}
             >
-              <Plus className="h-4 w-4" strokeWidth={1.5} />
               <input
                 type="color"
-                className="sr-only"
-                value={draft ?? accent ?? '#4f7df0'}
-                onChange={(e) => setDraft(e.target.value)}
-                aria-label="Pick a custom accent color"
+                className="absolute inset-0 cursor-pointer opacity-0"
+                value={hex}
+                onChange={(e) => {
+                  setHex(e.target.value)
+                  setAccent(e.target.value) // live preview only - not saved yet
+                }}
+                aria-label="Pick a custom color from the spectrum"
               />
             </label>
+            <input
+              type="text"
+              value={hex}
+              onChange={(e) => setHex(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') commitHex()
+              }}
+              spellCheck={false}
+              placeholder="#rrggbb"
+              aria-label="Hex color, press Enter to add to your palette"
+              className="w-28 rounded-full border border-hairline bg-transparent px-3.5 py-1.5 text-[14px] tabular-nums text-content outline-none transition-colors focus:border-hairline-strong"
+            />
+            <span className="text-[12px] text-tertiary">Enter to save</span>
           </div>
+
           <p className="mt-3 text-[13px] leading-relaxed text-tertiary">
             Your color tints the entire app - background, text, and controls - not
-            just the ring. Tap{' '}
-            <span className="inline-flex h-4 w-4 -translate-y-px items-center justify-center rounded-full border border-dashed border-hairline-strong align-middle">
-              <Plus className="h-2.5 w-2.5" strokeWidth={2} />
-            </span>{' '}
-            to pick a color, then tap the{' '}
-            <span className="inline-flex h-4 w-4 -translate-y-px items-center justify-center rounded-full bg-content align-middle text-elevated">
-              <Check className="h-2.5 w-2.5" strokeWidth={2.5} />
-            </span>{' '}
-            swatch to save it. Pick Monochrome for the original black-and-white look.
+            just the ring. Drag the spectrum to try a color, then press Enter to add
+            it to your palette. Pick Monochrome for the original black-and-white look.
           </p>
         </Section>
       </motion.div>

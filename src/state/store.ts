@@ -88,6 +88,7 @@ interface State {
   setAccent: (color: string | null) => void
   addSwatch: (color: string) => void
   removeSwatch: (color: string) => void
+  clearSwatches: () => void
   setMasterVolume: (v: number) => void
   toggleSound: (id: string) => void
   setVolume: (id: string, v: number) => void
@@ -209,6 +210,14 @@ export const useStore = create<State>()(
         const c = color.toLowerCase()
         set({ customSwatches: get().customSwatches.filter((s) => s !== c) })
         if (get().accent === c) get().setAccent(null)
+      },
+
+      clearSwatches: () => {
+        // Drop every saved custom color; if the active accent was one of them,
+        // fall back to monochrome so nothing dangles.
+        const { accent, customSwatches } = get()
+        if (accent && customSwatches.includes(accent)) get().setAccent(null)
+        set({ customSwatches: [] })
       },
 
       setMasterVolume: (v) => {
