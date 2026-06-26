@@ -15,13 +15,13 @@ export function SoundPanel() {
 
   return (
     <div className="fixed inset-0 z-[60] flex items-end justify-center sm:items-center">
-      {/* Backdrop */}
-      <motion.div
+      {/* Backdrop. Kept static (no JS opacity animation): Framer Motion toggles
+          will-change while animating, and that layer teardown makes Chromium
+          drop the backdrop-filter, snapping the blur to clear when it ends. */}
+      <div
         className="absolute inset-0 bg-black/40 backdrop-blur-sm"
         onClick={close}
         aria-hidden="true"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
       />
 
       <motion.div
