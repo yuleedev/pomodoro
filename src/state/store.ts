@@ -352,6 +352,8 @@ export const useStore = create<State>()(
         try {
           set({ tasks: await fetchTasks() })
           get().rolloverDailyTasks()
+          // The active task is always the one at the top of the list.
+          set({ selectedTaskId: get().tasks[0]?.id ?? null })
         } catch {
           /* keep whatever we have on a transient failure */
         }
@@ -373,7 +375,9 @@ export const useStore = create<State>()(
           recurrence: opts?.recurrence,
           notes: notes || undefined,
         }
-        set({ tasks: [...tasks, task] })
+        const next = [...tasks, task]
+        // Keep the active task pinned to the top of the list.
+        set({ tasks: next, selectedTaskId: next[0]?.id ?? null })
         void createTask(task)
       },
 
@@ -401,17 +405,15 @@ export const useStore = create<State>()(
       },
 
       deleteTask: (id) => {
-        const { tasks, selectedTaskId } = get()
-        set({
-          tasks: tasks.filter((x) => x.id !== id),
-          selectedTaskId: selectedTaskId === id ? null : selectedTaskId,
-        })
+        const remaining = get().tasks.filter((x) => x.id !== id)
+        set({ tasks: remaining, selectedTaskId: remaining[0]?.id ?? null })
         void deleteTaskRow(id)
       },
 
       reorderTasks: (ordered) => {
         const withPos = ordered.map((t, i) => ({ ...t, position: i }))
-        set({ tasks: withPos })
+        // Reordering can change which task is on top, so re-pin the active one.
+        set({ tasks: withPos, selectedTaskId: withPos[0]?.id ?? null })
         void saveOrder(withPos)
       },
 
